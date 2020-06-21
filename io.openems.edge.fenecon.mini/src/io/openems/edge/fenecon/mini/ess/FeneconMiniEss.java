@@ -3,12 +3,29 @@ package io.openems.edge.fenecon.mini.ess;
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Level;
 import io.openems.common.channel.Unit;
+import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Doc;
+import io.openems.edge.common.channel.IntegerWriteChannel;
+import io.openems.edge.common.channel.WriteChannel;
+import io.openems.edge.common.channel.value.Value;
+import io.openems.edge.common.component.OpenemsComponent;
+import io.openems.edge.fenecon.mini.ess.statemachine.State;
 
-public interface FeneconMiniEss {
+public interface FeneconMiniEss extends OpenemsComponent {
 
 	public static enum ChannelId implements io.openems.edge.common.channel.ChannelId {
+		STATE_MACHINE(Doc.of(State.values()) //
+				.text("Current State of State-Machine")), //
+		RUN_FAILED(Doc.of(Level.FAULT) //
+				.text("Running the Logic failed")),
+		GRID_MAX_CHARGE_CURRENT(Doc.of(OpenemsType.INTEGER) //
+				.accessMode(AccessMode.READ_WRITE) //
+				.unit(Unit.MILLIAMPERE)), //
+		GRID_MAX_DISCHARGE_CURRENT(Doc.of(OpenemsType.INTEGER) //
+				.accessMode(AccessMode.READ_WRITE) //
+				.unit(Unit.MILLIAMPERE)), //
+
 		// EnumReadChannels
 		SYSTEM_STATE(Doc.of(SystemState.values())), //
 		CONTROL_MODE(Doc.of(ControlMode.values())), //
@@ -16,11 +33,13 @@ public interface FeneconMiniEss {
 
 		// EnumWriteChannels
 		PCS_MODE(Doc.of(PcsMode.values()) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
+				.accessMode(AccessMode.READ_WRITE)), //
 		SETUP_MODE(Doc.of(SetupMode.values()) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
+				.accessMode(AccessMode.READ_WRITE)), //
 		SET_WORK_STATE(Doc.of(SetWorkState.values()) //
 				.accessMode(AccessMode.WRITE_ONLY)),
+		DEBUG_RUN_STATE(Doc.of(DebugRunState.values()) //
+				.accessMode(AccessMode.READ_WRITE)),
 
 		// IntegerWriteChannels
 		RTC_YEAR(Doc.of(OpenemsType.INTEGER) //
@@ -50,10 +69,6 @@ public interface FeneconMiniEss {
 		BATTERY_POWER(Doc.of(OpenemsType.INTEGER) //
 				.unit(Unit.WATT)), //
 
-		BECU1_CHARGE_CURRENT_LIMIT(Doc.of(OpenemsType.INTEGER) //
-				.unit(Unit.MILLIAMPERE)), //
-		BECU1_DISCHARGE_CURRENT_LIMIT(Doc.of(OpenemsType.INTEGER) //
-				.unit(Unit.MILLIAMPERE)), //
 		BECU1_TOTAL_VOLTAGE(Doc.of(OpenemsType.INTEGER) //
 				.unit(Unit.VOLT)), //
 		BECU1_TOTAL_CURRENT(Doc.of(OpenemsType.INTEGER) //
@@ -487,4 +502,149 @@ public interface FeneconMiniEss {
 			return this.doc;
 		}
 	}
+
+	/**
+	 * Gets the Channel for {@link ChannelId#SETUP_MODE}.
+	 *
+	 * @return the Channel
+	 */
+	public default WriteChannel<SetupMode> getSetupModeChannel() {
+		return this.channel(ChannelId.SETUP_MODE);
+	}
+
+	/**
+	 * Gets the Setup Mode. See {@link ChannelId#SETUP_MODE}.
+	 *
+	 * @return the Channel {@link Value}
+	 */
+	public default SetupMode getSetupMode() {
+		return this.getSetupModeChannel().value().asEnum();
+	}
+
+	/**
+	 * Set the Setup Mode. See {@link ChannelId#SETUP_MODE}.
+	 *
+	 * @param value the next value
+	 * @throws OpenemsNamedException on error
+	 */
+	public default void setSetupMode(SetupMode value) throws OpenemsNamedException {
+		this.getSetupModeChannel().setNextWriteValue(value);
+	}
+
+	/**
+	 * Gets the Channel for {@link ChannelId#PCS_MODE}.
+	 *
+	 * @return the Channel
+	 */
+	public default WriteChannel<PcsMode> getPcsModeChannel() {
+		return this.channel(ChannelId.PCS_MODE);
+	}
+
+	/**
+	 * Gets the PCS Mode. See {@link ChannelId#PCS_MODE}.
+	 *
+	 * @return the Channel {@link Value}
+	 */
+	public default PcsMode getPcsMode() {
+		return this.getPcsModeChannel().value().asEnum();
+	}
+
+	/**
+	 * Set the PCS Mode. See {@link ChannelId#PCS_MODE}.
+	 *
+	 * @param value the next value
+	 * @throws OpenemsNamedException on error
+	 */
+	public default void setPcsMode(PcsMode value) throws OpenemsNamedException {
+		this.getPcsModeChannel().setNextWriteValue(value);
+	}
+
+	/**
+	 * Gets the Channel for {@link ChannelId#DEBUG_RUN_STATE}.
+	 *
+	 * @return the Channel
+	 */
+	public default WriteChannel<DebugRunState> getDebugRunStateChannel() {
+		return this.channel(ChannelId.DEBUG_RUN_STATE);
+	}
+
+	/**
+	 * Gets the Debug Run-State. See {@link ChannelId#DEBUG_RUN_STATE}.
+	 *
+	 * @return the Channel {@link Value}
+	 */
+	public default DebugRunState getDebugRunState() {
+		return this.getDebugRunStateChannel().value().asEnum();
+	}
+
+	/**
+	 * Set the Debug Run-State. See {@link ChannelId#DEBUG_RUN_STATE}.
+	 *
+	 * @param value the next value
+	 * @throws OpenemsNamedException on error
+	 */
+	public default void setDebugRunState(DebugRunState value) throws OpenemsNamedException {
+		this.getDebugRunStateChannel().setNextWriteValue(value);
+	}
+
+	/**
+	 * Gets the Channel for {@link ChannelId#GRID_MAX_CHARGE_CURRENT}.
+	 *
+	 * @return the Channel
+	 */
+	public default IntegerWriteChannel getGridMaxChargeCurrentChannel() {
+		return this.channel(ChannelId.GRID_MAX_CHARGE_CURRENT);
+	}
+
+	/**
+	 * Gets the Grid Max-Charge-Current in [mA]. See
+	 * {@link ChannelId#GRID_MAX_CHARGE_CURRENT}.
+	 *
+	 * @return the Channel {@link Value}
+	 */
+	public default Value<Integer> getGridMaxChargeCurrent() {
+		return this.getGridMaxChargeCurrentChannel().value();
+	}
+
+	/**
+	 * Set the Grid Max-Charge-Current in [mA]. See
+	 * {@link ChannelId#GRID_MAX_CHARGE_CURRENT}.
+	 *
+	 * @param value the next value
+	 * @throws OpenemsNamedException on error
+	 */
+	public default void setGridMaxChargeCurrent(Integer value) throws OpenemsNamedException {
+		this.getGridMaxChargeCurrentChannel().setNextWriteValue(value);
+	}
+
+	/**
+	 * Gets the Channel for {@link ChannelId#GRID_MAX_DISCHARGE_CURRENT}.
+	 *
+	 * @return the Channel
+	 */
+	public default IntegerWriteChannel getGridMaxDischargeCurrentChannel() {
+		return this.channel(ChannelId.GRID_MAX_DISCHARGE_CURRENT);
+	}
+
+	/**
+	 * Gets the Grid Max-Discharge-Current in [mA]. See
+	 * {@link ChannelId#GRID_MAX_DISCHARGE_CURRENT}.
+	 *
+	 * @return the Channel {@link Value}
+	 */
+	public default Value<Integer> getGridMaxDischargeCurrent() {
+		return this.getGridMaxDischargeCurrentChannel().value();
+	}
+
+	/**
+	 * Set the Grid Max-Charge-Current in [mA]. See
+	 * {@link ChannelId#GRID_MAX_CHARGE_CURRENT}.
+	 *
+	 * @param value the next value
+	 * @throws OpenemsNamedException on error
+	 */
+	public default void setGridMaxDischargeCurrent(Integer value) throws OpenemsNamedException {
+		this.getGridMaxDischargeCurrentChannel().setNextWriteValue(value);
+	}
+
 }
