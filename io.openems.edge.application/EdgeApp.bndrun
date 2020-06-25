@@ -31,6 +31,7 @@
 	bnd.identity;id='io.openems.edge.batteryinverter.kaco.blueplanetgridsave',\
 	bnd.identity;id='io.openems.edge.batteryinverter.sunspec',\
 	bnd.identity;id='io.openems.edge.battery.soltaro',\
+	bnd.identity;id='io.openems.edge.battery.bmw',\
 	bnd.identity;id='io.openems.edge.bridge.mbus',\
 	bnd.identity;id='io.openems.edge.bridge.modbus',\
 	bnd.identity;id='io.openems.edge.bridge.onewire',\
@@ -144,6 +145,7 @@
 	io.openems.edge.battery.api;version=snapshot,\
 	io.openems.edge.battery.bydcommercial;version=snapshot,\
 	io.openems.edge.battery.soltaro;version=snapshot,\
+	io.openems.edge.battery.bmw;version=snapshot,\
 	io.openems.edge.batteryinverter.api;version=snapshot,\
 	io.openems.edge.batteryinverter.kaco.blueplanetgridsave;version=snapshot,\
 	io.openems.edge.batteryinverter.sunspec;version=snapshot,\

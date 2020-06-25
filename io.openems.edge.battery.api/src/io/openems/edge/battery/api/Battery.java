@@ -5,6 +5,7 @@ import org.osgi.annotation.versioning.ProviderType;
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
+import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.IntegerReadChannel;
 import io.openems.edge.common.channel.value.Value;
@@ -32,6 +33,16 @@ import io.openems.edge.common.startstop.StartStoppable;
 public interface Battery extends StartStoppable, OpenemsComponent {
 
 	public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
+		/**
+		 * Indicates that the battery has started and is ready for charging/discharging.
+		 * 
+		 * <ul>
+		 * <li>Interface: Battery
+		 * <li>Type: Boolean
+		 * </ul>
+		 */
+		// TODO: why can this not be handled using 'STATE'?
+		READY_FOR_WORKING(Doc.of(OpenemsType.BOOLEAN)),
 		/**
 		 * State of Charge.
 		 * 
@@ -221,6 +232,15 @@ public interface Battery extends StartStoppable, OpenemsComponent {
 				.build();
 	}
 
+	/**
+	 * Gets the indicator if ready to charge/discharge.
+	 * 
+	 * @return the Channel
+	 */
+	public default Channel<Boolean> getReadyForWorking() {
+		return this.channel(ChannelId.READY_FOR_WORKING);
+	}
+	
 	/**
 	 * Gets the Channel for {@link ChannelId#SOC}.
 	 *
