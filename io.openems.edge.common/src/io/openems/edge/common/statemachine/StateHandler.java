@@ -11,12 +11,20 @@ import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 public abstract class StateHandler<STATE extends State<STATE, CONTEXT>, CONTEXT> {
 
 	/**
+<<<<<<< HEAD
 	 * Holds the main logic of StateMachine State.
+=======
+	 * Runs the main logic of StateMachine State and returns the next State.
+>>>>>>> develop
 	 * 
 	 * @param context the {@link Context}.
 	 * @return the next State
 	 */
+<<<<<<< HEAD
 	protected abstract STATE getNextState(CONTEXT context) throws OpenemsNamedException;
+=======
+	protected abstract STATE runAndGetNextState(CONTEXT context) throws OpenemsNamedException;
+>>>>>>> develop
 
 	/**
 	 * Gets called before the StateMachine changes from another State to this State.

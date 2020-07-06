@@ -14,6 +14,7 @@ import io.openems.edge.ess.generic.symmetric.statemachine.State;
 
 public class GenericManagedSymmetricEssTest {
 
+<<<<<<< HEAD
 	private final static String ESS_ID = "ess0";
 	private final static String BATTERY_ID = "battery0";
 	private final static String BATTERY_INVERTER_ID = "batteryInverter0";
@@ -21,6 +22,15 @@ public class GenericManagedSymmetricEssTest {
 	private final static ChannelAddress ESS_STATE_MACHINE = new ChannelAddress(ESS_ID, "StateMachine");
 	private final static ChannelAddress BATTERY_START_STOP = new ChannelAddress(BATTERY_ID, "StartStop");
 	private final static ChannelAddress BATTERY_INVERTER_START_STOP = new ChannelAddress(BATTERY_INVERTER_ID,
+=======
+	private static final String ESS_ID = "ess0";
+	private static final String BATTERY_ID = "battery0";
+	private static final String BATTERY_INVERTER_ID = "batteryInverter0";
+
+	private static final ChannelAddress ESS_STATE_MACHINE = new ChannelAddress(ESS_ID, "StateMachine");
+	private static final ChannelAddress BATTERY_START_STOP = new ChannelAddress(BATTERY_ID, "StartStop");
+	private static final ChannelAddress BATTERY_INVERTER_START_STOP = new ChannelAddress(BATTERY_INVERTER_ID,
+>>>>>>> develop
 			"StartStop");
 
 	@Test

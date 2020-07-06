@@ -46,18 +46,35 @@ public interface ManagedSymmetricBatteryInverter extends SymmetricBatteryInverte
 	}
 
 	/**
+<<<<<<< HEAD
 	 * Apply {@link Battery} and target Active and Reactive Power.
 	 * 
 	 * <p>
 	 * 
 	 * This is called on ManagedSymmetrcEss::applyPower()
+=======
+	 * Run the Battery-Inverter.
+	 * 
+	 * <ul>
+	 * <li>bring the Battery-Inverter in the desired state
+	 * <li>apply information from {@link Battery} as required
+	 * <li>set the target Active and Reactive Power.
+	 * </ul>
+	 * 
+	 * <p>
+	 * This is called on ManagedSymmetricEss::applyPower()
+>>>>>>> develop
 	 * 
 	 * @param battery          the {@link Battery}
 	 * @param setActivePower   the active power setpoint
 	 * @param setReactivePower the reactive power setpoint
 	 * @throws OpenemsNamedException on error
 	 */
+<<<<<<< HEAD
 	public void apply(Battery battery, int setActivePower, int setReactivePower) throws OpenemsNamedException;
+=======
+	public void run(Battery battery, int setActivePower, int setReactivePower) throws OpenemsNamedException;
+>>>>>>> develop
 
 	/**
 	 * Gets static Constraints for this Battery-Inverter. Override this method to

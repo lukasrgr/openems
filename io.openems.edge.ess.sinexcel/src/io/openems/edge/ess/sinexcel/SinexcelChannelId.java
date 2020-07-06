@@ -220,7 +220,27 @@ public enum SinexcelChannelId implements ChannelId {
 	STATE_18(Doc.of(Level.INFO) //
 			.text("On/Off Status")), //
 	STATE_19(Doc.of(Level.INFO) //
+<<<<<<< HEAD
 			.text("On Grid")),
+=======
+			.text("On Grid") //
+			.onInit(c -> { //
+				StateChannel channel = (StateChannel) c;
+				EssSinexcel self = (EssSinexcel) channel.getComponent();
+				((StateChannel) channel).onChange((oldValue, newValue) -> {
+					Optional<Boolean> value = newValue.asOptional();
+					if (!value.isPresent()) {
+						self._setGridMode(GridMode.UNDEFINED);
+					} else {
+						if (value.get()) {
+							self._setGridMode(GridMode.ON_GRID);
+						} else {
+							self._setGridMode(GridMode.OFF_GRID);
+						}
+					}
+				});
+			})),
+>>>>>>> develop
 	STATE_20(Doc.of(Level.INFO) //
 			.text("Off Grid")), //
 	STATE_21(Doc.of(Level.WARNING) //

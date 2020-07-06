@@ -211,6 +211,7 @@ public abstract class AbstractComponentTest<SELF extends AbstractComponentTest<S
 	public SUT getSut() {
 		return this.sut;
 	}
+<<<<<<< HEAD
 
 	/**
 	 * Gets an instance of the correct subclass of myself.
@@ -349,9 +350,50 @@ public abstract class AbstractComponentTest<SELF extends AbstractComponentTest<S
 			method.setAccessible(true);
 			method.invoke(this.sut, args);
 			return;
+=======
+
+	/**
+	 * Gets an instance of the correct subclass of myself.
+	 * 
+	 * @return myself
+	 */
+	protected abstract SELF self();
+
+	/**
+	 * Adds a OSGi Declarative Services @Reference via java reflection.
+	 * 
+	 * <p>
+	 * Can also be used to set any other private field via reflection.
+	 * 
+	 * @param memberName the name of the field or method
+	 * @param object     the reference object
+	 * @return itself, to use as a builder
+	 * @throws Exception on error
+	 */
+	public SELF addReference(String memberName, Object object) throws Exception {
+		// Set the reference recursively via reflection
+		if (!this.addReference(this.sut.getClass(), memberName, object)) {
+			throw new Exception("Unable to add reference on field or method [" + memberName + "]");
 		}
+
+		// Store reference
+		this.references.add(object);
+
+		// If this is a DummyComponentManager -> fill it with existing Components
+		if (object instanceof DummyComponentManager) {
+			for (OpenemsComponent component : this.components.values()) {
+				((DummyComponentManager) object).addComponent(component);
+			}
+		}
+		// If this is an OpenemsComponent -> store it for later
+		if (object instanceof OpenemsComponent) {
+			this.addComponent((OpenemsComponent) object);
+>>>>>>> develop
+		}
+		return this.self();
 	}
 
+<<<<<<< HEAD
 	private void callDeactivate() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException,
 			NoSuchMethodException, SecurityException {
 		Class<?> clazz = this.sut.getClass();
@@ -386,6 +428,158 @@ public abstract class AbstractComponentTest<SELF extends AbstractComponentTest<S
 	}
 
 	/**
+=======
+	/**
+	 * Adds an available {@link OpenemsComponent}.
+	 * 
+	 * <p>
+	 * If the provided Component is a {@link DummyComponentManager}.
+	 * 
+	 * @param component
+	 * @return itself, to use as a builder
+	 */
+	public SELF addComponent(OpenemsComponent component) {
+		this.components.put(component.id(), component);
+
+		// Is a DummyComponentManager present -> add this Component
+		for (Object object : this.references) {
+			if (object instanceof DummyComponentManager) {
+				((DummyComponentManager) object).addComponent(component);
+			}
+		}
+		return this.self();
+	}
+
+	/**
+	 * Calls the 'activate()' method of the 'system-under-test'.
+	 * 
+	 * <p>
+	 * If 'activate()' changes the configuration, the OSGi behavior is simulated by
+	 * calling 'deactivate()' and then again 'activate()'
+	 * 
+	 * @param config the configuration
+	 * @return itself, to use as a builder
+	 * @throws Exception on error
+	 */
+	public SELF activate(AbstractComponentConfig config) throws Exception {
+		int configChangeCount = this.getConfigChangeCount();
+		this.callActivate(config);
+
+		if (configChangeCount != this.getConfigChangeCount()) {
+			// deactivate + recursive call
+			this.callDeactivate();
+			this.activate(config);
+		}
+
+		// Now SUT can be added to the list, as it does have an ID now
+		this.addComponent(sut);
+		return this.self();
+	}
+
+	private int getConfigChangeCount() throws IOException, InvalidSyntaxException {
+		int result = 0;
+		for (Object object : this.references) {
+			if (object instanceof ConfigurationAdmin) {
+				ConfigurationAdmin cm = (ConfigurationAdmin) object;
+				Configuration[] configs = cm.listConfigurations(null);
+				for (Configuration config : configs) {
+					result += config.getChangeCount();
+				}
+			}
+		}
+		return result;
+	}
+
+	private void callActivate(AbstractComponentConfig config)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Class<?> clazz = this.sut.getClass();
+		Method[] methods = clazz.getDeclaredMethods();
+		for (Method method : methods) {
+			if (!method.getName().equals("activate")) {
+				continue;
+			}
+			Object[] args = new Object[method.getParameterCount()];
+			for (int i = 0; i < method.getParameterCount(); i++) {
+				Parameter parameter = method.getParameters()[i];
+				Object arg;
+
+				if (ComponentContext.class.isAssignableFrom(parameter.getType())) {
+					// ComponentContext
+					arg = null; // TODO create DummyComponentContext
+
+				} else if (parameter.getType().isInstance(config)) {
+					// Config
+					arg = config;
+
+				} else {
+					throw new IllegalArgumentException("Unknown activate() parameter " + parameter);
+
+				}
+				args[i] = arg;
+			}
+			method.setAccessible(true);
+			method.invoke(this.sut, args);
+			return;
+		}
+	}
+
+	private void callDeactivate() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException,
+			NoSuchMethodException, SecurityException {
+		Class<?> clazz = this.sut.getClass();
+		Method method = clazz.getDeclaredMethod("deactivate");
+		method.setAccessible(true);
+		method.invoke(this.sut);
+	}
+
+	private boolean addReference(Class<?> clazz, String memberName, Object object)
+			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+		try {
+			Field field = clazz.getDeclaredField(memberName);
+			field.setAccessible(true);
+			field.set(this.sut, object);
+			return true;
+		} catch (NoSuchFieldException e) {
+			// Ignore. Try method.
+			if (this.invokeSingleArgMethod(clazz, memberName, object)) {
+				return true;
+			}
+		}
+		// If we are here, no matching field or method was found. Search in parent
+		// classes.
+		Class<?> parent = clazz.getSuperclass();
+		if (parent == null) {
+			return false; // reached 'java.lang.Object'
+		}
+		return addReference(parent, memberName, object);
+	}
+
+	private boolean invokeSingleArgMethod(Class<?> clazz, String methodName, Object arg)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Method[] methods = clazz.getDeclaredMethods();
+		for (Method method : methods) {
+			if (!method.getName().equals(methodName)) {
+				continue;
+			}
+			if (method.getParameterCount() != 1) {
+				continue;
+			}
+
+			Parameter parameter = method.getParameters()[0];
+			if (!parameter.getType().isAssignableFrom(arg.getClass())) {
+				continue;
+			}
+
+			method.setAccessible(true);
+			method.invoke(this.sut, arg);
+			return true;
+		}
+
+		// Unable to find matching method
+		return false;
+	}
+
+	/**
+>>>>>>> develop
 	 * Runs a Test-Case.
 	 * 
 	 * @param testCase The TestCase

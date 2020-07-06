@@ -11,10 +11,17 @@ GoRunning -->|timeout| Undefined
 Running -->|isRunning && everythingOk| Running
 Running -->|otherwise| Undefined
 
+<<<<<<< HEAD
 
 Undefined -->|target STOP| GoStopped
 GoStopped -->|isStopped| Stopped
 GoStopped -->|not timeout| GoStopped
+=======
+Undefined -->|target STOP| GoStopped
+GoStopped -->|isStopped| Stopped
+GoStopped -->|not timeout| GoStopped
+GoStopped -->|timeout| Undefined
+>>>>>>> develop
 
 Stopped -->|isStopped && everythingOk| Stopped
 Stopped -->|otherwise| Undefined

@@ -122,8 +122,23 @@ public interface Channel<T> {
 	 * 
 	 * @param callback the callback {@link Consumer}
 	 * @return the callback to enable fluent programming
+<<<<<<< HEAD
 	 */
 	public Consumer<Value<T>> onSetNextValue(Consumer<Value<T>> callback);
+
+	/**
+	 * Removes an onSetNextValue callback.
+	 * 
+	 * @see #onSetNextValue(Consumer)
+	 * @param callback the callback {@link Consumer}
+	 */
+	public void removeOnSetNextValueCallback(Consumer<?> callback);
+=======
+	 */
+	// TODO rename to 'addOnSetNextValueCallback()'; apply same naming also for
+	// other callbacks
+	public void onSetNextValue(Consumer<Value<T>> callback);
+>>>>>>> develop
 
 	/**
 	 * Removes an onSetNextValue callback.

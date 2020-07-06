@@ -63,6 +63,9 @@ public class BatteryDummy extends AbstractOpenemsComponent
 
 	@Override
 	public void handleEvent(Event event) {
+		if (!this.isEnabled()) {
+			return;
+		}
 		switch (event.getTopic()) {
 		case EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE:
 			this.updateChannels();
@@ -80,11 +83,19 @@ public class BatteryDummy extends AbstractOpenemsComponent
 		this._setMinCellTemperature(this.temperature);
 		this._setMaxCellTemperature(this.temperature);
 		this._setCapacity(this.capacityKWh);
+<<<<<<< HEAD
 
 		this._setVoltage(this.voltage);
 		this._setMinCellVoltage(this.minCellVoltage);
 		this._setMaxCellVoltage(this.minCellVoltage);
 
+=======
+
+		this._setVoltage(this.voltage);
+		this._setMinCellVoltage(this.minCellVoltage);
+		this._setMaxCellVoltage(this.minCellVoltage);
+
+>>>>>>> develop
 		this._setStartStop(StartStop.START);
 	}
 
