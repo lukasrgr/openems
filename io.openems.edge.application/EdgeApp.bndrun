@@ -24,6 +24,7 @@
 	bnd.identity;id='org.apache.felix.webconsole',\
 	bnd.identity;id='io.openems.edge.application',\
 	bnd.identity;id='io.openems.edge.battery.soltaro',\
+	bnd.identity;id='io.openems.edge.battery.bmw',\
 	bnd.identity;id='io.openems.edge.bridge.mbus',\
 	bnd.identity;id='io.openems.edge.bridge.modbus',\
 	bnd.identity;id='io.openems.edge.common',\

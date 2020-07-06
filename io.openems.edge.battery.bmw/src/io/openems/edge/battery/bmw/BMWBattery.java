@@ -33,6 +33,7 @@ import io.openems.edge.bridge.modbus.api.element.UnsignedDoublewordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
+import io.openems.edge.bridge.modbus.api.task.FC4ReadInputRegistersTask;
 import io.openems.edge.common.channel.BooleanWriteChannel;
 import io.openems.edge.common.channel.EnumReadChannel;
 import io.openems.edge.common.channel.IntegerWriteChannel;
@@ -467,7 +468,7 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 						m(BMWChannelId.SYSTEM_TIME, new UnsignedDoublewordElement(1407)) //
 				),
 
-				new FC3ReadRegistersTask(999, Priority.HIGH, m(BMWChannelId.LIFE_SIGN, new UnsignedWordElement(999)), //
+				new FC4ReadInputRegistersTask(999, Priority.HIGH, m(BMWChannelId.LIFE_SIGN, new UnsignedWordElement(999)),
 						m(BMWChannelId.BMS_STATE, new UnsignedWordElement(1000)), //
 						m(BMWChannelId.ERROR_BITS_1, new UnsignedWordElement(1001)), //
 						m(BMWChannelId.ERROR_BITS_2, new UnsignedWordElement(1002)), //
