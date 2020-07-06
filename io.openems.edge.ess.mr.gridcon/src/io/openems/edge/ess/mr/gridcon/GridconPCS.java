@@ -237,17 +237,10 @@ public class GridconPCS extends AbstractOpenemsModbusComponent
 			minCellVoltage = Math.min(minCellVoltage, minCellBattery);
 		}
 
-<<<<<<< HEAD
-		this.getAllowedCharge().setNextValue(allowedCharge);
-		this.getAllowedDischarge().setNextValue(allowedDischarge);
-		this.getCapacity().setNextValue(capacity);
-		this.channel(SymmetricEss.ChannelId.MIN_CELL_VOLTAGE).setNextValue(minCellVoltage);
-=======
 		this._setAllowedChargePower(allowedCharge);
 		this._setAllowedDischargePower(allowedDischarge);
 		this._setCapacity(capacity);
 		this._setMinCellVoltage(minCellVoltage);
->>>>>>> develop
 	}
 
 	/**
@@ -461,7 +454,7 @@ public class GridconPCS extends AbstractOpenemsModbusComponent
 				Optional<Integer> vBopt = batteryStringB.getVoltage().asOptional();
 				Optional<Integer> vCopt = batteryStringC.getVoltage().asOptional();
 
-				// Racks die abgeschalten sind dÃ¼rfen nicht berÃ¼cksichtigt werden
+				// Racks die abgeschalten sind dürfen nicht berücksichtigt werden
 				// --> Gewichtung auf 0
 
 				if (vAopt.isPresent() && vBopt.isPresent() && vCopt.isPresent()) {

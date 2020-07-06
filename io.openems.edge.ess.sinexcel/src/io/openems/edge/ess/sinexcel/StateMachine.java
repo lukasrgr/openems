@@ -84,7 +84,7 @@ public class StateMachine {
 		CurrentState currentState = getSinexcelState();
 		this.log.info("in error handler [" + currentState + "]");
 		
-		GridMode gridMode = this.parent.getGridMode().getNextValue().asEnum();
+		GridMode gridMode = this.parent.getGridMode();
 		this.log.info("mode is  [" + gridMode + "]");
 		
 		switch (gridMode) {
@@ -108,7 +108,7 @@ public class StateMachine {
 	 * @throws IllegalArgumentException
 	 */
 	private State handleUndefined() {
-		GridMode gridMode = this.parent.getGridMode().getNextValue().asEnum();
+		GridMode gridMode = this.parent.getGridMode();
 		CurrentState currentState = getSinexcelState();
 		if (currentState == CurrentState.FAULT) {
 			return State.ERROR;

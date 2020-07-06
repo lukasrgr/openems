@@ -134,20 +134,12 @@ public enum ErrorCode implements OptionsEnum {
 
 	@Override
 	public int getValue() {
-<<<<<<< HEAD
-		return value;
-=======
 		return this.value;
->>>>>>> develop
 	}
 
 	@Override
 	public String getName() {
-<<<<<<< HEAD
-		return name;
-=======
 		return this.name;
->>>>>>> develop
 	}
 
 	@Override

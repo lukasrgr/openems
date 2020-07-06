@@ -156,11 +156,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		// FIXME no good coding style; use direct mapping in ModbusProtocol-definition
 		// instead
 		this.battery.getSocChannel().onChange((oldValue, newValue) -> {
-<<<<<<< HEAD
-			this.getSoc().setNextValue(newValue.get()); // FIXME why?
-=======
 			this._setSoc(newValue.get());
->>>>>>> develop
 			this.channel(REFUStore88KChannelId.BAT_SOC).setNextValue(newValue.get());
 		});
 

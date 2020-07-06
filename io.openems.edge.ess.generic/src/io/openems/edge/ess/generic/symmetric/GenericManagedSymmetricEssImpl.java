@@ -1,10 +1,7 @@
 package io.openems.edge.ess.generic.symmetric;
 
-<<<<<<< HEAD
-=======
 import java.util.concurrent.atomic.AtomicReference;
 
->>>>>>> develop
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -155,19 +152,11 @@ public class GenericManagedSymmetricEssImpl extends AbstractOpenemsComponent imp
 
 	@Override
 	public String debugLog() {
-<<<<<<< HEAD
-		return "SoC:" + this.getSoc().value().asString() //
-				+ "|L:" + this.getActivePower().value().asString() //
-				+ "|Allowed:" //
-				+ this.channel(ManagedSymmetricEss.ChannelId.ALLOWED_CHARGE_POWER).value().asStringWithoutUnit() + ";" //
-				+ this.channel(ManagedSymmetricEss.ChannelId.ALLOWED_DISCHARGE_POWER).value().asString() //
-=======
 		return "SoC:" + this.getSoc().asString() //
 				+ "|L:" + this.getActivePower().asString() //
 				+ "|Allowed:" //
 				+ this.getAllowedChargePower().asStringWithoutUnit() + ";" //
 				+ this.getAllowedDischargePower().asString() //
->>>>>>> develop
 				+ "|" + this.channel(GenericManagedSymmetricEss.ChannelId.STATE_MACHINE).value().asOptionString();
 	}
 
@@ -183,11 +172,7 @@ public class GenericManagedSymmetricEssImpl extends AbstractOpenemsComponent imp
 	 */
 	@Override
 	public void applyPower(int activePower, int reactivePower) throws OpenemsNamedException {
-<<<<<<< HEAD
-		this.batteryInverter.apply(battery, activePower, reactivePower);
-=======
 		this.batteryInverter.run(this.battery, activePower, reactivePower);
->>>>>>> develop
 	}
 
 	/**
@@ -230,14 +215,6 @@ public class GenericManagedSymmetricEssImpl extends AbstractOpenemsComponent imp
 		return result;
 	}
 
-<<<<<<< HEAD
-	private StartStop startStopTarget = StartStop.UNDEFINED;
-
-	@Override
-	public void setStartStop(StartStop value) {
-		this.startStopTarget = value;
-		this.stateMachine.forceNextState(State.UNDEFINED);
-=======
 	private AtomicReference<StartStop> startStopTarget = new AtomicReference<StartStop>(StartStop.UNDEFINED);
 
 	@Override
@@ -246,7 +223,6 @@ public class GenericManagedSymmetricEssImpl extends AbstractOpenemsComponent imp
 			// Set only if value changed
 			this.stateMachine.forceNextState(State.UNDEFINED);
 		}
->>>>>>> develop
 	}
 
 	@Override
@@ -254,11 +230,7 @@ public class GenericManagedSymmetricEssImpl extends AbstractOpenemsComponent imp
 		switch (this.config.startStop()) {
 		case AUTO:
 			// read StartStop-Channel
-<<<<<<< HEAD
-			return this.startStopTarget;
-=======
 			return this.startStopTarget.get();
->>>>>>> develop
 
 		case START:
 			// force START
@@ -272,8 +244,5 @@ public class GenericManagedSymmetricEssImpl extends AbstractOpenemsComponent imp
 		assert false;
 		return StartStop.UNDEFINED; // can never happen
 	}
-<<<<<<< HEAD
-=======
 
->>>>>>> develop
 }

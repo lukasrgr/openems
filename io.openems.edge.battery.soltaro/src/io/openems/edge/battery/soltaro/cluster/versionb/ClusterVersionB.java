@@ -30,14 +30,9 @@ import io.openems.edge.battery.soltaro.ModuleParameters;
 import io.openems.edge.battery.soltaro.ResetState;
 import io.openems.edge.battery.soltaro.SoltaroBattery;
 import io.openems.edge.battery.soltaro.State;
-<<<<<<< HEAD:io.openems.edge.battery.soltaro/src/io/openems/edge/battery/soltaro/cluster/versionb/Cluster.java
-import io.openems.edge.battery.soltaro.cluster.versionb.Enums.ContactorControl;
-import io.openems.edge.battery.soltaro.cluster.versionb.Enums.RackUsage;
-=======
 import io.openems.edge.battery.soltaro.cluster.SoltaroCluster;
 import io.openems.edge.battery.soltaro.cluster.enums.ClusterStartStop;
 import io.openems.edge.battery.soltaro.cluster.enums.RackUsage;
->>>>>>> develop:io.openems.edge.battery.soltaro/src/io/openems/edge/battery/soltaro/cluster/versionb/ClusterVersionB.java
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
 import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
@@ -69,13 +64,8 @@ import io.openems.edge.common.taskmanager.Priority;
 		configurationPolicy = ConfigurationPolicy.REQUIRE, //
 		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE //
 )
-<<<<<<< HEAD:io.openems.edge.battery.soltaro/src/io/openems/edge/battery/soltaro/cluster/versionb/Cluster.java
-public class Cluster extends AbstractOpenemsModbusComponent
-		implements Battery, OpenemsComponent, EventHandler, ModbusSlave, StartStoppable {
-=======
 public class ClusterVersionB extends AbstractOpenemsModbusComponent implements SoltaroBattery, SoltaroCluster, Battery,
 		OpenemsComponent, EventHandler, ModbusSlave, StartStoppable {
->>>>>>> develop:io.openems.edge.battery.soltaro/src/io/openems/edge/battery/soltaro/cluster/versionb/ClusterVersionB.java
 
 	public static final int DISCHARGE_MAX_A = 0; // default value 0 to avoid damages
 	public static final int CHARGE_MAX_A = 0; // default value 0 to avoid damages
@@ -117,13 +107,9 @@ public class ClusterVersionB extends AbstractOpenemsModbusComponent implements S
 				OpenemsComponent.ChannelId.values(), //
 				Battery.ChannelId.values(), //
 				StartStoppable.ChannelId.values(), //
-<<<<<<< HEAD:io.openems.edge.battery.soltaro/src/io/openems/edge/battery/soltaro/cluster/versionb/Cluster.java
-				ClusterChannelId.values() //
-=======
 				SoltaroBattery.ChannelId.values(), //
 				SoltaroCluster.ChannelId.values(), //
 				ClusterVersionBChannelId.values() //
->>>>>>> develop:io.openems.edge.battery.soltaro/src/io/openems/edge/battery/soltaro/cluster/versionb/ClusterVersionB.java
 		);
 	}
 

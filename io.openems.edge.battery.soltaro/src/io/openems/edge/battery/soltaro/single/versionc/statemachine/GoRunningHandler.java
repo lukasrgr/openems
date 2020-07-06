@@ -5,17 +5,10 @@ import java.time.Instant;
 
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.edge.battery.soltaro.single.versionc.enums.PreChargeControl;
-<<<<<<< HEAD:io.openems.edge.battery.soltaro/src/io/openems/edge/battery/soltaro/single/versionc/statemachine/GoRunning.java
-import io.openems.edge.battery.soltaro.single.versionc.utils.Constants;
-import io.openems.edge.common.statemachine.StateHandler;
-
-public class GoRunning extends StateHandler<State, Context> {
-=======
 import io.openems.edge.battery.soltaro.versionc.utils.Constants;
 import io.openems.edge.common.statemachine.StateHandler;
 
 public class GoRunningHandler extends StateHandler<State, Context> {
->>>>>>> develop:io.openems.edge.battery.soltaro/src/io/openems/edge/battery/soltaro/single/versionc/statemachine/GoRunningHandler.java
 
 	private Instant lastAttempt = Instant.MIN;
 	private int attemptCounter = 0;

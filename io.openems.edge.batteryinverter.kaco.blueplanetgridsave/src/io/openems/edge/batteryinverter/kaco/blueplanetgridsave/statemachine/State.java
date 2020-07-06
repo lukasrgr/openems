@@ -1,25 +1,9 @@
 package io.openems.edge.batteryinverter.kaco.blueplanetgridsave.statemachine;
 
-<<<<<<< HEAD
-import com.google.common.base.CaseFormat;
-
-=======
->>>>>>> develop
 import io.openems.common.types.OptionsEnum;
 import io.openems.edge.common.statemachine.StateHandler;
 
 public enum State implements io.openems.edge.common.statemachine.State<State, Context>, OptionsEnum {
-<<<<<<< HEAD
-	UNDEFINED(-1, new Undefined()), //
-
-	GO_RUNNING(10, new GoRunning()), //
-	RUNNING(11, new Running()), //
-
-	GO_STOPPED(20, new GoStopped()), //
-	STOPPED(21, new Stopped()), //
-
-	ERROR_HANDLING(30, new ErrorHandling()) //
-=======
 	UNDEFINED(-1, new UndefinedHandler()), //
 
 	GO_RUNNING(10, new GoRunningHandler()), //
@@ -29,7 +13,6 @@ public enum State implements io.openems.edge.common.statemachine.State<State, Co
 	STOPPED(21, new StoppedHandler()), //
 
 	ERROR(30, new ErrorHandler()) //
->>>>>>> develop
 	;
 
 	private final int value;
@@ -47,11 +30,7 @@ public enum State implements io.openems.edge.common.statemachine.State<State, Co
 
 	@Override
 	public String getName() {
-<<<<<<< HEAD
-		return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, this.name());
-=======
 		return this.name();
->>>>>>> develop
 	}
 
 	@Override

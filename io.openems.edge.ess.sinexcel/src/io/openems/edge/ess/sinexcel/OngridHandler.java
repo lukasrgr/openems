@@ -37,7 +37,7 @@ public class OngridHandler {
 
 	protected State run() throws IllegalArgumentException, OpenemsNamedException {
 		log.info("[Inside ongrid run]");
-		GridMode gridMode = this.parent.parent.getGridMode().getNextValue().asEnum();
+		GridMode gridMode = this.parent.parent.getGridMode();
 		switch (gridMode) {
 		case ON_GRID:
 			break;

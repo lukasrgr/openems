@@ -26,11 +26,7 @@ import io.openems.edge.battery.api.Battery;
 import io.openems.edge.battery.soltaro.SoltaroBattery;
 import io.openems.edge.battery.soltaro.single.versionc.statemachine.Context;
 import io.openems.edge.battery.soltaro.single.versionc.statemachine.State;
-<<<<<<< HEAD
-import io.openems.edge.battery.soltaro.single.versionc.utils.CellChannelFactory;
-=======
 import io.openems.edge.battery.soltaro.versionc.utils.CellChannelFactory;
->>>>>>> develop
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
 import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
@@ -673,14 +669,6 @@ public class SingleRackVersionCImpl extends AbstractOpenemsModbusComponent imple
 		);
 	}
 
-<<<<<<< HEAD
-	private StartStop startStopTarget = StartStop.UNDEFINED;
-
-	@Override
-	public void setStartStop(StartStop value) {
-		this.startStopTarget = value;
-		this.stateMachine.forceNextState(State.UNDEFINED);
-=======
 	private AtomicReference<StartStop> startStopTarget = new AtomicReference<StartStop>(StartStop.UNDEFINED);
 
 	@Override
@@ -689,7 +677,6 @@ public class SingleRackVersionCImpl extends AbstractOpenemsModbusComponent imple
 			// Set only if value changed
 			this.stateMachine.forceNextState(State.UNDEFINED);
 		}
->>>>>>> develop
 	}
 
 	@Override
@@ -697,11 +684,7 @@ public class SingleRackVersionCImpl extends AbstractOpenemsModbusComponent imple
 		switch (this.config.startStop()) {
 		case AUTO:
 			// read StartStop-Channel
-<<<<<<< HEAD
-			return this.startStopTarget;
-=======
 			return this.startStopTarget.get();
->>>>>>> develop
 
 		case START:
 			// force START

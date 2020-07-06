@@ -6,11 +6,7 @@ import io.openems.common.types.OptionsEnum;
 import io.openems.edge.common.statemachine.StateHandler;
 
 public enum State implements io.openems.edge.common.statemachine.State<State, Context>, OptionsEnum {
-<<<<<<< HEAD
-	UNDEFINED(-1, new Undefined()), //
-=======
 	UNDEFINED(-1, new UndefinedHandler()), //
->>>>>>> develop
 
 	GO_RUNNING(10, new GoRunningHandler()), //
 	RUNNING(11, new RunningHandler()), //

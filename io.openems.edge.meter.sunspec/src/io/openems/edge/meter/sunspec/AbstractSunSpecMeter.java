@@ -12,11 +12,7 @@ import org.slf4j.LoggerFactory;
 import io.openems.common.exceptions.OpenemsException;
 import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
 import io.openems.edge.bridge.modbus.sunspec.AbstractOpenemsSunSpecComponent;
-<<<<<<< HEAD
-import io.openems.edge.bridge.modbus.sunspec.ISunSpecModel;
-=======
 import io.openems.edge.bridge.modbus.sunspec.DefaultSunSpecModel;
->>>>>>> develop
 import io.openems.edge.bridge.modbus.sunspec.SunSpecModel;
 import io.openems.edge.bridge.modbus.sunspec.SunSpecPoint;
 import io.openems.edge.common.channel.Channel;
@@ -30,11 +26,7 @@ public abstract class AbstractSunSpecMeter extends AbstractOpenemsSunSpecCompone
 
 	private final Logger log = LoggerFactory.getLogger(AbstractSunSpecMeter.class);
 
-<<<<<<< HEAD
-	public AbstractSunSpecMeter(Map<ISunSpecModel, Priority> activeModels,
-=======
 	public AbstractSunSpecMeter(Map<SunSpecModel, Priority> activeModels,
->>>>>>> develop
 			io.openems.edge.common.channel.ChannelId[] firstInitialChannelIds,
 			io.openems.edge.common.channel.ChannelId[]... furtherInitialChannelIds) {
 		super(activeModels, firstInitialChannelIds, furtherInitialChannelIds);

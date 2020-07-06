@@ -1,5 +1,7 @@
 package io.openems.edge.ess.sinexcel;
 
+import java.util.Optional;
+
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Level;
 import io.openems.common.channel.Unit;
@@ -8,6 +10,8 @@ import io.openems.edge.common.channel.ChannelId;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.IntegerDoc;
 import io.openems.edge.common.channel.IntegerWriteChannel;
+import io.openems.edge.common.channel.StateChannel;
+import io.openems.edge.common.sum.GridMode;
 
 public enum SinexcelChannelId implements ChannelId {
 	STATE_MACHINE(Doc.of(State.values()) //
@@ -220,9 +224,6 @@ public enum SinexcelChannelId implements ChannelId {
 	STATE_18(Doc.of(Level.INFO) //
 			.text("On/Off Status")), //
 	STATE_19(Doc.of(Level.INFO) //
-<<<<<<< HEAD
-			.text("On Grid")),
-=======
 			.text("On Grid") //
 			.onInit(c -> { //
 				StateChannel channel = (StateChannel) c;
@@ -240,7 +241,6 @@ public enum SinexcelChannelId implements ChannelId {
 					}
 				});
 			})),
->>>>>>> develop
 	STATE_20(Doc.of(Level.INFO) //
 			.text("Off Grid")), //
 	STATE_21(Doc.of(Level.WARNING) //

@@ -38,11 +38,8 @@ import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC6WriteRegisterTask;
-<<<<<<< HEAD
 import io.openems.edge.common.channel.BooleanReadChannel;
 import io.openems.edge.common.channel.BooleanWriteChannel;
-=======
->>>>>>> develop
 import io.openems.edge.common.channel.EnumWriteChannel;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.channel.StateChannel;
@@ -53,10 +50,7 @@ import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
 import io.openems.edge.common.modbusslave.ModbusSlaveTable;
 import io.openems.edge.common.startstop.StartStop;
-<<<<<<< HEAD
 import io.openems.edge.common.sum.GridMode;
-=======
->>>>>>> develop
 import io.openems.edge.common.taskmanager.Priority;
 import io.openems.edge.ess.api.ManagedSymmetricEss;
 import io.openems.edge.ess.api.SymmetricEss;
@@ -71,12 +65,9 @@ import io.openems.edge.ess.power.api.Relationship;
 		name = "Ess.Sinexcel", //
 		immediate = true, //
 		configurationPolicy = ConfigurationPolicy.REQUIRE, //
-<<<<<<< HEAD
-		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE ) //
-=======
 		property = { EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE, //
 				EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE }) //
->>>>>>> develop
+
 public class EssSinexcel extends AbstractOpenemsModbusComponent
 		implements SymmetricEss, ManagedSymmetricEss, EventHandler, OpenemsComponent, ModbusSlave {
 
@@ -181,26 +172,17 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		}
 
 		this.battery.getSocChannel().onChange((oldValue, newValue) -> {
-<<<<<<< HEAD
-			this.getSoc().setNextValue(newValue.get());
-=======
 			this._setSoc(newValue.get());
->>>>>>> develop
 			this.channel(SinexcelChannelId.BAT_SOC).setNextValue(newValue.get());
 		});
 
 		this.battery.getVoltageChannel().onChange((oldValue, newValue) -> {
 			this.channel(SinexcelChannelId.BAT_VOLTAGE).setNextValue(newValue.get());
 		});
-<<<<<<< HEAD
-		
-		this.battery.getMinCellVoltageChannel().onChange((oldValue, newValue) -> {
-			this.channel(SymmetricEss.ChannelId.MIN_CELL_VOLTAGE).setNextValue(newValue.get());
-=======
+
 
 		this.battery.getMinCellVoltageChannel().onChange((oldValue, newValue) -> {
 			this._setMinCellVoltage(newValue.get());
->>>>>>> develop
 		});
 	}
 
@@ -214,17 +196,12 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 			return;
 		}
 
-<<<<<<< HEAD
-		int disMaxA = battery.getDischargeMaxCurrentChannel().value().orElse(0);
-		int chaMaxA = battery.getChargeMaxCurrentChannel().value().orElse(0);
-		int disMinV = battery.getDischargeMinVoltageChannel().value().orElse(0);
-		int chaMaxV = battery.getChargeMaxVoltageChannel().value().orElse(0);
-=======
+
 		int disMaxA = battery.getDischargeMaxCurrent().orElse(0);
 		int chaMaxA = battery.getChargeMaxCurrent().orElse(0);
 		int disMinV = battery.getDischargeMinVoltage().orElse(0);
 		int chaMaxV = battery.getChargeMaxVoltage().orElse(0);
->>>>>>> develop
+
 
 		// Sinexcel range for Max charge/discharge current is 0A to 90A,
 		if (chaMaxA > 90) {
@@ -842,17 +819,21 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 
 		if (isGridMode.isPresent() && isGridMode.get() == false) {
 			this.logInfo(this.log, "The grid mode is ON grid");
-			this.getGridMode().setNextValue(GridMode.ON_GRID);
+			this._setGridMode(GridMode.ON_GRID);
+			//this.getGridMode().setNextValue(GridMode.ON_GRID);
 		} else if (isGridMode.isPresent() && isGridMode.get() == true) {
 			this.logInfo(this.log, "The grid mode is OFF grid");
-			this.getGridMode().setNextValue(GridMode.OFF_GRID);
+			this._setGridMode(GridMode.OFF_GRID);
+			//this.getGridMode().setNextValue(GridMode.OFF_GRID);
 		} else if ((isGridMode.isPresent() && isGridMode.get() == true)
 				&& (isBenderWaiting.isPresent() && isBenderWaiting.get() == true)) {
 			this.logInfo(this.log, "The grid mode is undefined in bender waiting");
-			this.getGridMode().setNextValue(GridMode.UNDEFINED);
+			this._setGridMode(GridMode.UNDEFINED);
+			//this.getGridMode().setNextValue(GridMode.UNDEFINED);
 		} else {
 			this.logInfo(this.log, "The grid mode is Undefined");
-			this.getGridMode().setNextValue(GridMode.UNDEFINED);
+			this._setGridMode(GridMode.UNDEFINED);
+			//this.getGridMode().setNextValue(GridMode.UNDEFINED);
 		}
 	}
 

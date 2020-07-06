@@ -6,19 +6,6 @@ import io.openems.common.types.OptionsEnum;
 import io.openems.edge.common.statemachine.StateHandler;
 
 public enum State implements io.openems.edge.common.statemachine.State<State, Context>, OptionsEnum {
-<<<<<<< HEAD
-	UNDEFINED(-1, new Undefined()), //
-
-	START_BATTERY(10, new StartBattery()), //
-	START_BATTERY_INVERTER(11, new StartBatteryInverter()), //
-	STARTED(12, new Started()), //
-
-	STOP_BATTERY_INVERTER(20, new StopBattery()), //
-	STOP_BATTERY(21, new StopBatteryInverter()), //
-	STOPPED(22, new Stopped()), //
-
-	ERROR_HANDLING(30, new ErrorHandling()), //
-=======
 	UNDEFINED(-1, new UndefinedHandler()), //
 
 	START_BATTERY(10, new StartBatteryHandler()), //
@@ -30,7 +17,6 @@ public enum State implements io.openems.edge.common.statemachine.State<State, Co
 	STOPPED(22, new StoppedHandler()), //
 
 	ERROR(30, new ErrorHandler()), //
->>>>>>> develop
 	;
 
 	private final int value;

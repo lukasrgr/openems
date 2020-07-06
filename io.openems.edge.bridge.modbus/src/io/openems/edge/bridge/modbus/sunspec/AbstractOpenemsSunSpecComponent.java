@@ -37,11 +37,7 @@ public abstract class AbstractOpenemsSunSpecComponent extends AbstractOpenemsMod
 	private final Logger log = LoggerFactory.getLogger(AbstractOpenemsSunSpecComponent.class);
 
 	// The active SunSpec-Models and their reading-priority
-<<<<<<< HEAD
-	private final Map<ISunSpecModel, Priority> activeModels;
-=======
 	private final Map<SunSpecModel, Priority> activeModels;
->>>>>>> develop
 	private final ModbusProtocol modbusProtocol;
 
 	private int readFromCommonBlockNo = 1;
@@ -60,11 +56,7 @@ public abstract class AbstractOpenemsSunSpecComponent extends AbstractOpenemsMod
 	 * @param furtherInitialChannelIds forwarded to
 	 *                                 {@link AbstractOpenemsModbusComponent}
 	 */
-<<<<<<< HEAD
-	public AbstractOpenemsSunSpecComponent(Map<ISunSpecModel, Priority> activeModels,
-=======
 	public AbstractOpenemsSunSpecComponent(Map<SunSpecModel, Priority> activeModels,
->>>>>>> develop
 			io.openems.edge.common.channel.ChannelId[] firstInitialChannelIds,
 			io.openems.edge.common.channel.ChannelId[]... furtherInitialChannelIds) {
 		super(firstInitialChannelIds, furtherInitialChannelIds);
@@ -152,30 +144,16 @@ public abstract class AbstractOpenemsSunSpecComponent extends AbstractOpenemsMod
 					} else {
 
 						// Should this Block be considered?
-<<<<<<< HEAD
-						Entry<ISunSpecModel, Priority> activeEntry = this.getActiveModelForId(blockId);
-						if (activeEntry != null) {
-							ISunSpecModel sunSpecModel = activeEntry.getKey();
-							Priority priority = activeEntry.getValue();
-
-							// Read block
-							readBlockFuture = this.addBlock(startAddress, sunSpecModel, priority);
-=======
 						Entry<SunSpecModel, Priority> activeEntry = this.getActiveModelForId(blockId);
 						if (activeEntry != null) {
 							SunSpecModel sunSpecModel = activeEntry.getKey();
 							Priority priority = activeEntry.getValue();
 							this.addBlock(startAddress, sunSpecModel, priority);
->>>>>>> develop
 
 						} else {
 							// This block is not considered, because the Model is not active
 							this.logInfo(this.log,
 									"Ignoring SunSpec-Model [" + blockId + "] starting at [" + startAddress + "]");
-<<<<<<< HEAD
-							readBlockFuture = CompletableFuture.completedFuture(null);
-=======
->>>>>>> develop
 						}
 					}
 
@@ -198,13 +176,8 @@ public abstract class AbstractOpenemsSunSpecComponent extends AbstractOpenemsMod
 	 * @param blockId the SunSpec Block-ID
 	 * @return the entry with Model and priority
 	 */
-<<<<<<< HEAD
-	private Entry<ISunSpecModel, Priority> getActiveModelForId(int blockId) {
-		for (Entry<ISunSpecModel, Priority> entry : this.activeModels.entrySet()) {
-=======
 	private Entry<SunSpecModel, Priority> getActiveModelForId(int blockId) {
 		for (Entry<SunSpecModel, Priority> entry : this.activeModels.entrySet()) {
->>>>>>> develop
 			if (entry.getKey().getBlockId() == blockId) {
 				return entry;
 			}
@@ -216,17 +189,10 @@ public abstract class AbstractOpenemsSunSpecComponent extends AbstractOpenemsMod
 	 * Overwrite to provide custom SunSpecModel.
 	 * 
 	 * @param blockId the Block-Id
-<<<<<<< HEAD
-	 * @return the {@link ISunSpecModel}
-	 * @throws IllegalArgumentException on error
-	 */
-	protected ISunSpecModel getSunSpecModel(int blockId) throws IllegalArgumentException {
-=======
 	 * @return the {@link SunSpecModel}
 	 * @throws IllegalArgumentException on error
 	 */
 	protected SunSpecModel getSunSpecModel(int blockId) throws IllegalArgumentException {
->>>>>>> develop
 		return null;
 	}
 
@@ -259,17 +225,9 @@ public abstract class AbstractOpenemsSunSpecComponent extends AbstractOpenemsMod
 	 * @param priority     the reading priority
 	 * @return future that gets completed when the Block elements are read
 	 */
-<<<<<<< HEAD
-	private CompletableFuture<Void> addBlock(int startAddress, ISunSpecModel model, Priority priority) {
-		this.logInfo(this.log, "Adding SunSpec-Model [" + model.getBlockId() + ":" + model.label() + "] starting at ["
-				+ startAddress + "]");
-
-		final CompletableFuture<Void> finished = new CompletableFuture<Void>();
-=======
 	private void addBlock(int startAddress, SunSpecModel model, Priority priority) {
 		this.logInfo(this.log, "Adding SunSpec-Model [" + model.getBlockId() + ":" + model.label() + "] starting at ["
 				+ startAddress + "]");
->>>>>>> develop
 		AbstractModbusElement<?>[] elements = new AbstractModbusElement[model.points().length];
 		startAddress += 2;
 		for (int i = 0; i < model.points().length; i++) {
@@ -278,64 +236,6 @@ public abstract class AbstractOpenemsSunSpecComponent extends AbstractOpenemsMod
 			startAddress += element.getLength();
 			elements[i] = element;
 
-<<<<<<< HEAD
-		this.readElementsOnce(elements).thenAccept(values -> {
-			/*
-			 * Use results to prepare final Modbus Task
-			 * 
-			 * -> register Channels to defined SunSpec points
-			 * 
-			 * -> ignore non-defined SunSpec points with DummyElement
-			 */
-			for (int i = 0; i < values.size(); i++) {
-				SunSpecPoint point = model.points()[i];
-				Object value = values.get(i);
-				AbstractModbusElement<?> element = elements[i];
-
-				if (point.isDefined(value)) {
-					// Point is available -> create Channel
-					SunSChannelId<?> channelId = point.getChannelId();
-					this.addChannel(channelId);
-
-					if (point.get().scaleFactor.isPresent()) {
-						// This Point needs a ScaleFactor
-						// - find the ScaleFactor-Point
-						String scaleFactorName = SunSpecCodeGenerator.toUpperUnderscore(point.get().scaleFactor.get());
-						SunSpecPoint scaleFactorPoint = null;
-						for (SunSpecPoint sfPoint : model.points()) {
-							if (sfPoint.name().equals(scaleFactorName)) {
-								scaleFactorPoint = sfPoint;
-								continue;
-							}
-						}
-						if (scaleFactorPoint == null) {
-							// Unable to find ScaleFactor-Point
-							this.logError(this.log, "Unable to find ScaleFactor [" + scaleFactorName + "] for Point ["
-									+ point.name() + "]");
-						}
-
-						// Add a scale-factor mapping between Element and Channel
-						element = m(channelId, element,
-								new ElementToChannelScaleFactorConverter(this, scaleFactorPoint.getChannelId()));
-
-					} else {
-						// Add a direct mapping between Element and Channel
-						element = m(channelId, element);
-					}
-
-					// Evaluate Access-Mode of the Channel
-					switch (point.get().accessMode) {
-					case READ_ONLY:
-						// Read-Only -> replace element with dummy
-						element = new DummyRegisterElement(element.getStartAddress(),
-								element.getStartAddress() + point.get().type.length - 1);
-						break;
-					case READ_WRITE:
-					case WRITE_ONLY:
-						// Add a Write-Task
-						final Task writeTask = new FC16WriteRegistersTask(element.getStartAddress(), element);
-						this.modbusProtocol.addTask(writeTask);
-=======
 			SunSChannelId<?> channelId = point.getChannelId();
 			this.addChannel(channelId);
 
@@ -347,7 +247,6 @@ public abstract class AbstractOpenemsSunSpecComponent extends AbstractOpenemsMod
 				for (SunSpecPoint sfPoint : model.points()) {
 					if (sfPoint.name().equals(scaleFactorName)) {
 						scaleFactorPoint = sfPoint;
->>>>>>> develop
 						break;
 					}
 				}
@@ -377,11 +276,6 @@ public abstract class AbstractOpenemsSunSpecComponent extends AbstractOpenemsMod
 						value -> value));
 				;
 			}
-<<<<<<< HEAD
-			final Task readTask = new FC3ReadRegistersTask(elements[0].getStartAddress(), priority, elements);
-			this.modbusProtocol.addTask(readTask);
-=======
->>>>>>> develop
 
 			// Evaluate Access-Mode of the Channel
 			switch (point.get().accessMode) {

@@ -3,11 +3,7 @@ package io.openems.edge.battery.soltaro.single.versionc.statemachine;
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.edge.common.statemachine.StateHandler;
 
-<<<<<<< HEAD:io.openems.edge.battery.soltaro/src/io/openems/edge/battery/soltaro/single/versionc/statemachine/GoConfiguration.java
-public class GoConfiguration extends StateHandler<State, Context> {
-=======
 public class GoConfigurationHandler extends StateHandler<State, Context> {
->>>>>>> develop:io.openems.edge.battery.soltaro/src/io/openems/edge/battery/soltaro/single/versionc/statemachine/GoConfigurationHandler.java
 
 //	private void configureSlaves() {
 //	if (nextConfiguringProcess == ConfiguringProcess.NONE) {

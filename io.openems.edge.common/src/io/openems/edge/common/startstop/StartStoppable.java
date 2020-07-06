@@ -79,8 +79,6 @@ public interface StartStoppable extends OpenemsComponent {
 	}
 
 	/**
-<<<<<<< HEAD
-=======
 	 * Is this device or service started?
 	 * 
 	 * <ul>
@@ -113,7 +111,6 @@ public interface StartStoppable extends OpenemsComponent {
 	}
 
 	/**
->>>>>>> develop
 	 * Internal method to set the 'nextValue' on {@link ChannelId#START_STOP}
 	 * Channel.
 	 * 
@@ -130,8 +127,6 @@ public interface StartStoppable extends OpenemsComponent {
 	 * @throws OpenemsNamedException on error
 	 */
 	public void setStartStop(StartStop value) throws OpenemsNamedException;
-<<<<<<< HEAD
-=======
 
 	/**
 	 * Starts the device or service represented by this OpenEMS Component.
@@ -156,5 +151,4 @@ public interface StartStoppable extends OpenemsComponent {
 	public default void stop() throws OpenemsNamedException {
 		this._setStartStop(StartStop.STOP);
 	}
->>>>>>> develop
 }

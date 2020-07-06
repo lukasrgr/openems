@@ -37,7 +37,7 @@ public class OffgridHandler {
 
 	protected State run() throws IllegalArgumentException, OpenemsNamedException {
 		log.info("Inside Off grid");
-		GridMode gridMode = this.parent.parent.getGridMode().getNextValue().asEnum();
+		GridMode gridMode = this.parent.parent.getGridMode();
 		switch (gridMode) {
 		case ON_GRID:
 			return State.GOING_ONGRID;

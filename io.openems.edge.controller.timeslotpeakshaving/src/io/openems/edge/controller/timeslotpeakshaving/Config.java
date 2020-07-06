@@ -3,8 +3,8 @@ package io.openems.edge.controller.timeslotpeakshaving;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
-@ObjectClassDefinition( //
-		name = "Controller Timeslot Peakshaving", //
+@ObjectClassDefinition(//
+		name = "Controller Peak-Shaving Symmetric Timeslot", //
 		description = "This controller Peak shaves during the high threshold configured time-slot, and charges the battery outside the timeslot.")
 @interface Config {
 
@@ -19,7 +19,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 	@AttributeDefinition(name = "Ess-ID", description = "ID of Ess device.")
 	String ess();
-	
+
 	@AttributeDefinition(name = "Grid-Meter-ID", description = "ID of the Grid-Meter.")
 	String meter_id();
 
@@ -34,24 +34,42 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 	@AttributeDefinition(name = "Daily Endtime", description = "for example: 17:05")
 	String endTime();
-	
-	@AttributeDefinition(name = "Slow start Time", description = "The time to slow charging of the battery within timeslot and not within highthreshold time")
-	String slowStartTime();
 
-	@AttributeDefinition(name = "Which days?", description = "On which days should the algorithm run?")
-	WeekdayFilter weekdayFilter() default WeekdayFilter.EVERDAY;
-	
+	@AttributeDefinition(name = "Monday?", description = "Algorithm to be run on monday?")
+	boolean monday() default true;
+
+	@AttributeDefinition(name = "Tuesday?", description = "Algorithm to be run on tuesday?")
+	boolean tuesday() default true;
+
+	@AttributeDefinition(name = "Wednesday?", description = "Algorithm to be run on wednesday?")
+	boolean wednesday() default true;
+
+	@AttributeDefinition(name = "Thursday?", description = "Algorithm to be run on thursday?")
+	boolean thursday() default true;
+
+	@AttributeDefinition(name = "Friday?", description = "Algorithm to be run on friday?")
+	boolean friday() default true;
+
+	@AttributeDefinition(name = "Saturday?", description = "Algorithm to be run on saturday?")
+	boolean saturday() default true;
+
+	@AttributeDefinition(name = "Sunday?", description = "Algorithm to be run on sunday?")
+	boolean sunday() default true;
+
 	@AttributeDefinition(name = "Peak-Shaving power", description = "Grid purchase power above this value is considered a peak and shaved to this value.")
 	int peakShavingPower();
 
 	@AttributeDefinition(name = "Recharge power", description = "If grid purchase power is below this value battery is recharged.")
-	int rechargePower();	
+	int rechargePower();
 
-	@AttributeDefinition(name = "Charge Power", description = "Charge power per ess in Watt and neg. values for example: -10000")
-	int chargePower();
+	@AttributeDefinition(name = "Slow Charge Starttime", description = "The start time for slow charging of the battery within start and end date, but not within highthreshold time")
+	String slowChargeStartTime();
+
+	@AttributeDefinition(name = "Slow Charge Power", description = "Charge power per ess in Watt and neg. values for example: -10000")
+	int slowChargePower();
 
 	@AttributeDefinition(name = "Hysteresis SoC", description = "Controller charges the ess until it is full, charging is started again when hysteresis soc is reached")
 	int hysteresisSoc();
 
-	String webconsole_configurationFactory_nameHint() default "Controller Timeslot Peakshaving [{id}]";
+	String webconsole_configurationFactory_nameHint() default "Controller Peak-Shaving Symmetric Timeslot [{id}]";
 }

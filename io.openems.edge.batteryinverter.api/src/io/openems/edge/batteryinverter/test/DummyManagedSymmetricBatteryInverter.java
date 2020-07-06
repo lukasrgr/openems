@@ -9,11 +9,6 @@ import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.startstop.StartStop;
 import io.openems.edge.common.startstop.StartStoppable;
-<<<<<<< HEAD
-import io.openems.edge.ess.api.ManagedSymmetricEss;
-import io.openems.edge.ess.api.SymmetricEss;
-=======
->>>>>>> develop
 
 /**
  * Provides a simple, simulated {@link ManagedSymmetricBatteryInverter}
@@ -27,13 +22,8 @@ public class DummyManagedSymmetricBatteryInverter extends AbstractOpenemsCompone
 		super(//
 				OpenemsComponent.ChannelId.values(), //
 				StartStoppable.ChannelId.values(), //
-<<<<<<< HEAD
-				ManagedSymmetricEss.ChannelId.values(), //
-				SymmetricEss.ChannelId.values() //
-=======
 				SymmetricBatteryInverter.ChannelId.values(), //
 				ManagedSymmetricBatteryInverter.ChannelId.values() //
->>>>>>> develop
 		);
 		for (Channel<?> channel : this.channels()) {
 			channel.nextProcessImage();
@@ -52,11 +42,7 @@ public class DummyManagedSymmetricBatteryInverter extends AbstractOpenemsCompone
 	}
 
 	@Override
-<<<<<<< HEAD
-	public void apply(Battery battery, int setActivePower, int setReactivePower) throws OpenemsNamedException {
-=======
 	public void run(Battery battery, int setActivePower, int setReactivePower) throws OpenemsNamedException {
->>>>>>> develop
 		this._setActivePower(setActivePower);
 		this._setReactivePower(setReactivePower);
 	}

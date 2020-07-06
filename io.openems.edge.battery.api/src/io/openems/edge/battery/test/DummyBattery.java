@@ -13,11 +13,6 @@ import io.openems.edge.common.startstop.StartStoppable;
  * together with the OpenEMS Component test framework.
  */
 public class DummyBattery extends AbstractOpenemsComponent implements Battery, OpenemsComponent, StartStoppable {
-<<<<<<< HEAD
-
-	public static final int MAX_APPARENT_POWER = Integer.MAX_VALUE;
-=======
->>>>>>> develop
 
 	public DummyBattery(String id) {
 		super(//

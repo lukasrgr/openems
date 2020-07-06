@@ -319,11 +319,7 @@ public class EssKacoBlueplanetGridsave50 extends AbstractOpenemsModbusComponent
 			this.getBatterySohChannel().setNextWriteValue(batSoH);
 			this.getBatteryTempChannel().setNextWriteValue(batTemp);
 
-<<<<<<< HEAD
-			this.getCapacity().setNextValue(battery.getCapacity().get());
-=======
 			this._setCapacity(battery.getCapacity().get());
->>>>>>> develop
 		} catch (OpenemsNamedException e) {
 			log.error("Error during setBatteryRanges, " + e.getMessage());
 		}
@@ -454,14 +450,8 @@ public class EssKacoBlueplanetGridsave50 extends AbstractOpenemsModbusComponent
 	 */
 	private void doChannelMapping() {
 		this.battery.getSocChannel().onChange((oldValue, newValue) -> {
-<<<<<<< HEAD
-			this.getSoc().setNextValue(newValue.get());
-			this.channel(ChannelId.BAT_SOC).setNextValue(newValue.get());
-			this.channel(SymmetricEss.ChannelId.SOC).setNextValue(newValue.get()); // FIXME why?
-=======
 			this._setSoc(newValue.get());
 			this.channel(ChannelId.BAT_SOC).setNextValue(newValue.get());
->>>>>>> develop
 		});
 
 		this.battery.getSohChannel().onChange((oldValue, newValue) -> {
@@ -473,21 +463,6 @@ public class EssKacoBlueplanetGridsave50 extends AbstractOpenemsModbusComponent
 		});
 
 		this.battery.getMinCellVoltageChannel().onChange((oldValue, newValue) -> {
-<<<<<<< HEAD
-			this.channel(SymmetricEss.ChannelId.MIN_CELL_VOLTAGE).setNextValue(newValue.get());
-		});
-
-		this.battery.getMaxCellVoltageChannel().onChange((oldValue, newValue) -> {
-			this.channel(SymmetricEss.ChannelId.MAX_CELL_VOLTAGE).setNextValue(newValue.get());
-		});
-
-		this.battery.getMinCellTemperatureChannel().onChange((oldValue, newValue) -> {
-			this.channel(SymmetricEss.ChannelId.MIN_CELL_TEMPERATURE).setNextValue(newValue.get());
-		});
-
-		this.battery.getMaxCellTemperatureChannel().onChange((oldValue, newValue) -> {
-			this.channel(SymmetricEss.ChannelId.MAX_CELL_TEMPERATURE).setNextValue(newValue.get());
-=======
 			this._setMinCellVoltage(newValue.get());
 		});
 
@@ -501,7 +476,6 @@ public class EssKacoBlueplanetGridsave50 extends AbstractOpenemsModbusComponent
 
 		this.battery.getMaxCellTemperatureChannel().onChange((oldValue, newValue) -> {
 			this._setMaxCellTemperature(newValue.get());
->>>>>>> develop
 		});
 	}
 

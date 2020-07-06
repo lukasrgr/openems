@@ -1,7 +1,7 @@
 package io.openems.edge.ess.sinexcel;
 
 import io.openems.edge.common.test.AbstractComponentConfig;
-
+@SuppressWarnings("all")
 public class MyConfig extends AbstractComponentConfig implements Config {
 
 	protected static class Builder {

@@ -253,11 +253,7 @@ public interface OpenemsComponent {
 	 * @return true if there is a Fault.
 	 */
 	public default boolean hasFaults() {
-<<<<<<< HEAD
-		Level level = this.getState().value().asEnum();
-=======
 		Level level = this.getState();
->>>>>>> develop
 		return level.isAtLeast(Level.FAULT);
 	}
 
