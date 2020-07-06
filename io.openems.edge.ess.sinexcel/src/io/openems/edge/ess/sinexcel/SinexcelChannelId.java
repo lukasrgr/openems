@@ -10,7 +10,8 @@ import io.openems.edge.common.channel.IntegerDoc;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 
 public enum SinexcelChannelId implements ChannelId {
-
+	STATE_MACHINE(Doc.of(State.values()) //
+			.text("Current State of State-Machine")), //
 	MOD_ON_CMD(Doc.of(FalseTrue.values()) //
 			.accessMode(AccessMode.READ_WRITE)), //
 	MOD_OFF_CMD(Doc.of(FalseTrue.values()) //

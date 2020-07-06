@@ -13,7 +13,7 @@ public class GoingOngridHandler {
 	private final Logger log = LoggerFactory.getLogger(GoingOffgridHandler.class);
 	private final StateMachine parent;
 
-	private State state = State.UNDEFINED;
+	private GoingOnGridState state = GoingOnGridState.UNDEFINED;
 
 	// WAIT
 	private LocalDateTime startedWaiting = null;
@@ -24,27 +24,45 @@ public class GoingOngridHandler {
 	}
 
 	public void initialize() {
-		this.state = State.UNDEFINED;
+		this.state = GoingOnGridState.UNDEFINED;
 		this.startedWaiting = null;
 	}
 
-	protected StateMachine.State run() throws OpenemsNamedException {
-		switch (this.state) {
-		case UNDEFINED:
-			this.state = this.doUndefined();
-			break;
+	protected State run() throws OpenemsNamedException {
+		
+		boolean stateChanged;
 
-		case WAIT:
-			this.state = this.doWait();
-			break;
+		do {
+			stateChanged = false;
+			switch (this.state) {
+			case UNDEFINED:
+				stateChanged = changeGoingOnGridHandlerState(this.doUndefined());
+				break;
+			case WAIT:
+				stateChanged = changeGoingOnGridHandlerState(this.doWait());
+				break;
+			case FINISH_GOING_ONGRID:
+				this.initialize();
+				stateChanged = changeGoingOnGridHandlerState(GoingOnGridState.FINISH_GOING_ONGRID);
+				return State.ONGRID; 
+			}
+		} while (stateChanged);
+		return State.GOING_ONGRID;
+	}
+	
 
-		case FINISH_GOING_ONGRID:
-			// finish GoingOffgridHandler, switch to OFFGRID-State
-			this.initialize();
-			return StateMachine.State.ONGRID;
-		}
-
-		return StateMachine.State.GOING_ONGRID;
+	/**
+	 * A flag to maintain change in the mode
+	 * 
+	 * @param nextmode the target mode
+	 * @return Flag that the mode is changed or not
+	 */
+	private boolean changeGoingOnGridHandlerState(GoingOnGridState nextState) {
+		if (this.state != nextState) {
+			this.state = nextState;
+			return true;
+		} else
+			return false;
 	}
 
 	/**
@@ -53,8 +71,8 @@ public class GoingOngridHandler {
 	 * 
 	 * @return the next state
 	 */
-	private State doUndefined() {
-		return State.WAIT;
+	private GoingOnGridState doUndefined() {
+		return GoingOnGridState.WAIT;
 	}
 
 	/**
@@ -63,9 +81,11 @@ public class GoingOngridHandler {
 	 * @return the next state
 	 * @throws OpenemsNamedException 
 	 */
-	private State doWait() throws OpenemsNamedException {
+	private GoingOnGridState doWait() throws OpenemsNamedException {
+		LocalDateTime now = LocalDateTime.now(this.parent.parent.clock);
 		if (this.startedWaiting == null) {
-			this.startedWaiting = LocalDateTime.now();
+			//this.startedWaiting = LocalDateTime.now();
+			this.startedWaiting = now;
 		}
 
 		/*
@@ -73,20 +93,21 @@ public class GoingOngridHandler {
 		 * Then can the EMS switch the PCS to on-grid mode and then a "start command".
 		 * 
 		 */
-		if (this.startedWaiting.plusSeconds(WAIT_SECONDS).isAfter(LocalDateTime.now())) {
+		//if (this.startedWaiting.plusSeconds(WAIT_SECONDS).isAfter(LocalDateTime.now())) {
+		if (this.startedWaiting.plusSeconds(WAIT_SECONDS).isAfter(now)) {
 			this.log.info("doWaitFirstSeconds() waiting the first seconds, sending the stop command");			
 			this.parent.parent.inverterOff();
-			return State.WAIT;
+			return GoingOnGridState.WAIT;
 		}
 
 		// finished waiting
 		this.log.info("finished waiting, Setting the grid mode to ON-grid and Sending the start command");
 		this.parent.parent.hardSetGridOnMode();
 		this.parent.parent.inverterOn();
-		return State.FINISH_GOING_ONGRID;
+		return GoingOnGridState.FINISH_GOING_ONGRID;
 	}
 
-	public enum State implements OptionsEnum {
+	public enum GoingOnGridState implements OptionsEnum {
 		UNDEFINED(-1, "Undefined"), //
 		WAIT(1, "For the first seconds just wait"), //
 		FINISH_GOING_ONGRID(3, "Finish Going to On-Grid"); //
@@ -94,7 +115,7 @@ public class GoingOngridHandler {
 		private final int value;
 		private final String name;
 
-		private State(int value, String name) {
+		private GoingOnGridState(int value, String name) {
 			this.value = value;
 			this.name = name;
 		}

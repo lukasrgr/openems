@@ -1,22 +1,27 @@
 package io.openems.edge.ess.sinexcel;
 
-import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
-import io.openems.common.types.OptionsEnum;
-import io.openems.edge.common.sum.GridMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
+import io.openems.common.types.OptionsEnum;
+import io.openems.edge.common.sum.GridMode;
+
 /**
- * Offgrid handler, One of the states in sinexcel running,
- * When there is no change in the gridmode, It does the operations for Offgrid  mode
+ * Offgrid handler, One of the states in sinexcel running, When there is no
+ * change in the gridmode, It does the operations for Offgrid mode
  * 
- * <p><ul>
- * <li> Set the digital output {@link io.openems.edge.ess.sinexcel.EssSinexcel#setDigitalOutputInOffgrid()} 
- * <li> First state is undefined {@link #doUndefined()}, 
- * which checks the first round check of the contactorOk or not {@link io.openems.edge.ess.sinexcel.EssSinexcel#isFirstCheckContactorOkInOngrid}
- * <li> Runs the Sinexcel in the ongrid mode
- * <li> If there is a error, the sinexcel is switched off in {@link #switchOff()}
- * </ul><p>
+ * <p>
+ * <ul>
+ * <li>Set the digital output
+ * {@link io.openems.edge.ess.sinexcel.EssSinexcel#setDigitalOutputInOffgrid()}
+ * <li>First state is undefined {@link #doUndefined()}, which checks the first
+ * round check of the contactorOk or not
+ * {@link io.openems.edge.ess.sinexcel.EssSinexcel#isFirstCheckContactorOkInOngrid}
+ * <li>Runs the Sinexcel in the ongrid mode
+ * <li>If there is a error, the sinexcel is switched off in {@link #switchOff()}
+ * </ul>
+ * <p>
  * 
  */
 public class OffgridHandler {
@@ -24,100 +29,164 @@ public class OffgridHandler {
 	private final Logger log = LoggerFactory.getLogger(OngridHandler.class);
 	private final StateMachine parent;
 
-	private State state = State.UNDEFINED;
+	private OffGridHandlerState state = OffGridHandlerState.UNDEFINED;
 
 	public OffgridHandler(StateMachine parent) {
 		this.parent = parent;
 	}
 
-	protected StateMachine.State run() throws IllegalArgumentException, OpenemsNamedException {
+	protected State run() throws IllegalArgumentException, OpenemsNamedException {
 		log.info("Inside Off grid");
 		GridMode gridMode = this.parent.parent.getGridMode().getNextValue().asEnum();
 		switch (gridMode) {
 		case ON_GRID:
-			return StateMachine.State.GOING_ONGRID;
+			return State.GOING_ONGRID;
 		case UNDEFINED:
-			return StateMachine.State.UNDEFINED;
+			return State.UNDEFINED;
 		case OFF_GRID:
 			break;
 		}
 
-		switch (this.state) {
-		case UNDEFINED:
-			this.state = this.doUndefined();
-			break;
+		this.parent.parent.setDigitalOutputInOffgrid();
+		boolean stateChanged;
 
-		case RUN_OFFGRID:
-			this.state = this.doOffgrid();
-			break;
+		do {
+			stateChanged = false;
+			switch (this.state) {
+			case UNDEFINED:
+				stateChanged = changeOffGridHandlerState(this.doUndefined());
+				break;
+			case RUN_OFFGRID:
+				stateChanged = changeOffGridHandlerState(this.doOffgrid());
+				break;
+			case GO_TO_ONGRID:
+				stateChanged = changeOffGridHandlerState(this.doGoingOnGrid());
+				return State.GOING_ONGRID;
+			case ERROR_SWITCHOFF:
+				stateChanged = changeOffGridHandlerState(this.switchOff());
+				break;
+			}
+		} while (stateChanged);
 
-		case GO_TO_ONGRID:
-			return StateMachine.State.GOING_ONGRID;
-
-		case ERROR_SWITCHOFF:
-			this.switchOff();
-			break;
-		}
-
-		return StateMachine.State.OFFGRID;
+		return State.OFFGRID;
 	}
 
-	private State switchOff() throws OpenemsNamedException {
+	/**
+	 * A flag to maintain change in the mode
+	 * 
+	 * @param nextmode the target mode
+	 * @return Flag that the mode is changed or not
+	 */
+	private boolean changeOffGridHandlerState(OffGridHandlerState nextState) {
+		if (this.state != nextState) {
+			this.state = nextState;
+			return true;
+		} else
+			return false;
+	}
+
+	private OffGridHandlerState doGoingOnGrid() {
+		log.info("[Inside do going on grid method]");
+		return OffGridHandlerState.GO_TO_ONGRID;
+	}
+
+	private OffGridHandlerState switchOff() throws OpenemsNamedException {
+		log.info("[Inside switch method]");
 		boolean contactorOk = this.parent.parent.isContactorOkInOffgrid();
 		if (contactorOk) {
 			this.parent.parent.inverterOn();
-			this.state = State.RUN_OFFGRID;
+			this.state = OffGridHandlerState.RUN_OFFGRID;
 
 		} else {
 			this.parent.parent.inverterOff();
 			this.parent.parent.digitalOutputAfterInverterOffInOffgrid();
-			this.state = State.ERROR_SWITCHOFF;
+			this.state = OffGridHandlerState.ERROR_SWITCHOFF;
 		}
 		return state;
 	}
 
-	private State doUndefined() throws IllegalArgumentException, OpenemsNamedException {
+	/**
+	 * First state is always the undefined state of all the states in the Sinexcel,
+	 * 
+	 * @return
+	 * @throws OpenemsNamedException
+	 */
+	private OffGridHandlerState doUndefined() throws IllegalArgumentException, OpenemsNamedException {
+		return ContactorChecker();
+	}
+
+	private OffGridHandlerState ContactorChecker() throws IllegalArgumentException, OpenemsNamedException {
+		log.info("[Inside do undefined method]");
 		boolean contactorChk = this.parent.parent.isFirstCheckContactorFault();
 		if (contactorChk) {
-			return State.RUN_OFFGRID;
+			log.info("[Inside do undefined method ****************]");
+			return OffGridHandlerState.RUN_OFFGRID;
 		} else {
-			return State.ERROR_SWITCHOFF;
+			log.info("[Inside do undefined method ------------------]");
+			return OffGridHandlerState.ERROR_SWITCHOFF;
 		}
 	}
+//	private OffGridHandlerState doOffgrid() throws OpenemsNamedException {
+//		// set this relais when in off grid mode
+//		
+//		boolean contactorOk = this.parent.parent.isContactorOkInOffgrid();
+//		if (contactorOk) {
+//			// Set the freq
+//			parent.parent.setFreq();
+//
+//			CurrentState currentState = this.parent.getSinexcelState();
+//
+//			switch (currentState) {
+//			case UNDEFINED:
+//			case SLEEPING:
+//			case MPPT:
+//			case THROTTLED:
+//			case STARTED:
+//				this.parent.parent.softStart(true);
+//				break;
+//			case SHUTTINGDOWN:
+//			case FAULT:
+//			case STANDBY:
+//			case OFF:
+//			default:
+//				this.parent.parent.softStart(false);
+//			}
+//			this.state = OffGridHandlerState.RUN_OFFGRID;
+//		} else {
+//			this.state = OffGridHandlerState.ERROR_SWITCHOFF;
+//		}
+//		return state;
+//	}
 
-	private State doOffgrid() throws OpenemsNamedException {
-		// set this relais when in off grid mode
-		this.parent.parent.setDigitalOutputInOffgrid();
-		boolean contactorOk = this.parent.parent.isContactorOkInOffgrid();
-		if (contactorOk) {
-			// Set the freq
-			parent.parent.setFreq();
-
-			CurrentState currentState = this.parent.getSinexcelState();
-
-			switch (currentState) {
-			case UNDEFINED:
-			case SLEEPING:
-			case MPPT:
-			case THROTTLED:
-			case STARTED:
-				this.parent.parent.softStart(true);
-				break;
-			case SHUTTINGDOWN:
-			case FAULT:
-			case STANDBY:
-			case OFF:
-			default:
-				this.parent.parent.softStart(false);
-			}
-			this.state = State.RUN_OFFGRID;
-		} else {
-			this.state = State.ERROR_SWITCHOFF;
+	/**
+	 * Perform offgrid and check for contactor
+	 * 
+	 * @return
+	 * @throws OpenemsNamedException
+	 */
+	private OffGridHandlerState doOffgrid() throws OpenemsNamedException {
+		log.info("In off grid handler , doooffgrid method");
+		parent.parent.setFreq();
+		CurrentState currentState = this.parent.getSinexcelState();
+		switch (currentState) {
+		case UNDEFINED:
+		case SLEEPING:
+		case MPPT:
+		case THROTTLED:
+		case STARTED:
+			this.parent.parent.softStart(true);
+			break;
+		case SHUTTINGDOWN:
+		case FAULT:
+		case STANDBY:
+		case OFF:
+		default:
+			this.parent.parent.softStart(false);
 		}
-		return state;
+		return ContactorChecker();
 	}
 
-	public enum State implements OptionsEnum {
+	public enum OffGridHandlerState implements OptionsEnum {
 		UNDEFINED(-1, "Undefined"), //
 		RUN_OFFGRID(1, "Run on on-grid mode"), //
 		GO_TO_ONGRID(2, "Go to the off grid"), //
@@ -126,7 +195,7 @@ public class OffgridHandler {
 		private final int value;
 		private final String name;
 
-		private State(int value, String name) {
+		private OffGridHandlerState(int value, String name) {
 			this.value = value;
 			this.name = name;
 		}

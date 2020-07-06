@@ -1,5 +1,6 @@
 package io.openems.edge.ess.sinexcel;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -44,9 +45,11 @@ import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.channel.StateChannel;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
+import io.openems.edge.common.cycle.Cycle;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
 import io.openems.edge.common.modbusslave.ModbusSlaveTable;
+import io.openems.edge.common.startstop.StartStop;
 import io.openems.edge.common.sum.GridMode;
 import io.openems.edge.common.taskmanager.Priority;
 import io.openems.edge.ess.api.ManagedSymmetricEss;
@@ -62,8 +65,7 @@ import io.openems.edge.ess.power.api.Relationship;
 		name = "Ess.Sinexcel", //
 		immediate = true, //
 		configurationPolicy = ConfigurationPolicy.REQUIRE, //
-		property = {EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE , //
-		EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE}) //
+		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE ) //
 public class EssSinexcel extends AbstractOpenemsModbusComponent
 		implements SymmetricEss, ManagedSymmetricEss, EventHandler, OpenemsComponent, ModbusSlave {
 
@@ -71,6 +73,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 
 	public static final int MAX_APPARENT_POWER = 30_000;
 	public static final int DEFAULT_UNIT_ID = 1;
+	protected final Clock clock;
 
 	public int maxApparentPower;
 	private InverterState inverterState;
@@ -91,6 +94,9 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	protected ComponentManager componentManager;
 
 	protected Config config;
+	
+	@Reference
+	private Cycle cycle;
 
 	@Reference
 	protected ConfigurationAdmin cm;
@@ -130,8 +136,12 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	protected void deactivate() {
 		super.deactivate();
 	}
-
+	
 	public EssSinexcel() throws OpenemsNamedException {
+		this(Clock.systemDefaultZone());
+	}
+
+	public EssSinexcel(Clock clock) throws OpenemsNamedException {
 		super(//
 				OpenemsComponent.ChannelId.values(), //
 				SymmetricEss.ChannelId.values(), //
@@ -140,6 +150,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		);
 		this.channel(SymmetricEss.ChannelId.MAX_APPARENT_POWER).setNextValue(EssSinexcel.MAX_APPARENT_POWER);
 		this.stateMachine = new StateMachine(this);
+		this.clock = clock;
 	}
 
 //	private void getNoOfCells() throws OpenemsNamedException {
@@ -158,17 +169,17 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 			return;
 		}
 
-		this.battery.getSoc().onChange((oldValue, newValue) -> {
+		this.battery.getSocChannel().onChange((oldValue, newValue) -> {
 			this.getSoc().setNextValue(newValue.get());
 			this.channel(SinexcelChannelId.BAT_SOC).setNextValue(newValue.get());
 			this.channel(SymmetricEss.ChannelId.SOC).setNextValue(newValue.get());
 		});
 
-		this.battery.getVoltage().onChange((oldValue, newValue) -> {
+		this.battery.getVoltageChannel().onChange((oldValue, newValue) -> {
 			this.channel(SinexcelChannelId.BAT_VOLTAGE).setNextValue(newValue.get());
 		});
 		
-		this.battery.getMinCellVoltage().onChange((oldValue, newValue) -> {
+		this.battery.getMinCellVoltageChannel().onChange((oldValue, newValue) -> {
 			this.channel(SymmetricEss.ChannelId.MIN_CELL_VOLTAGE).setNextValue(newValue.get());
 		});
 	}
@@ -183,10 +194,10 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 			return;
 		}
 
-		int disMaxA = battery.getDischargeMaxCurrent().value().orElse(0);
-		int chaMaxA = battery.getChargeMaxCurrent().value().orElse(0);
-		int disMinV = battery.getDischargeMinVoltage().value().orElse(0);
-		int chaMaxV = battery.getChargeMaxVoltage().value().orElse(0);
+		int disMaxA = battery.getDischargeMaxCurrentChannel().value().orElse(0);
+		int chaMaxA = battery.getChargeMaxCurrentChannel().value().orElse(0);
+		int disMinV = battery.getDischargeMinVoltageChannel().value().orElse(0);
+		int chaMaxV = battery.getChargeMaxVoltageChannel().value().orElse(0);
 
 		// Sinexcel range for Max charge/discharge current is 0A to 90A,
 		if (chaMaxA > 90) {
@@ -705,7 +716,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 
 	@Override
 	public Constraint[] getStaticConstraints() throws OpenemsNamedException {
-		if (!battery.getReadyForWorking().value().orElse(false)) {
+		if (battery.getStartStop() != StartStop.START) {
 			return new Constraint[] { //
 					this.createPowerConstraint("Battery is not ready", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, 0), //
 					this.createPowerConstraint("Battery is not ready", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, 0) //
@@ -771,7 +782,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 				this.updateGridMode();
 				this.setBatteryRanges();
 				this.doHandlingSlowFloatVoltage();
-				this.stateMachine.run();
+				this.stateMachine.run();				
 			} catch (OpenemsNamedException e) {
 				this.logError(this.log, "EventHandler failed: " + e.getMessage());
 			}
@@ -793,26 +804,27 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 
 		// Digital input channel one , false is on-grid and true is off-grid
 		BooleanReadChannel gridModeChannel = this.componentManager
-				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
 
 		// Digital input channel two , true when the bender is waiting
 		BooleanReadChannel benderWaitingChannel = this.componentManager
-				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
 
 		Optional<Boolean> isGridMode = gridModeChannel.value().asOptional();
 		Optional<Boolean> isBenderWaiting = benderWaitingChannel.value().asOptional();
 
-		//System.out.println("isGridMode : " + isGridMode.get());
-		//System.out.println("isBenderWaiting : " + isBenderWaiting.get());
-
 		if (isGridMode.isPresent() && isGridMode.get() == false) {
+			this.logInfo(this.log, "The grid mode is ON grid");
 			this.getGridMode().setNextValue(GridMode.ON_GRID);
 		} else if (isGridMode.isPresent() && isGridMode.get() == true) {
+			this.logInfo(this.log, "The grid mode is OFF grid");
 			this.getGridMode().setNextValue(GridMode.OFF_GRID);
 		} else if ((isGridMode.isPresent() && isGridMode.get() == true)
 				&& (isBenderWaiting.isPresent() && isBenderWaiting.get() == true)) {
+			this.logInfo(this.log, "The grid mode is undefined in bender waiting");
 			this.getGridMode().setNextValue(GridMode.UNDEFINED);
 		} else {
+			this.logInfo(this.log, "The grid mode is Undefined");
 			this.getGridMode().setNextValue(GridMode.UNDEFINED);
 		}
 	}
@@ -873,6 +885,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	 * @throws OpenemsNamedException
 	 */
 	public void setDigitalOutputInOngrid() throws IllegalArgumentException, OpenemsNamedException {
+		log.info("[Inside setDigitalOutputInOngrid]");
 		BooleanWriteChannel digitaloutput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
 		this.setOutput(digitaloutput1, true);
@@ -892,6 +905,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	 * @throws OpenemsNamedException
 	 */
 	public void setDigitalOutputInOffgrid() throws IllegalArgumentException, OpenemsNamedException {
+		log.info("[Inside setDigitalOutputInOffgrid]");
 		BooleanWriteChannel digitaloutput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
 		this.setOutput(digitaloutput1, false);
@@ -932,6 +946,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	 * @throws IllegalArgumentException
 	 */
 	public boolean isContactorOkInOngrid() throws IllegalArgumentException, OpenemsNamedException {
+		log.info("[Inside isContactorOkInOngrid]");
 		BooleanReadChannel digitalInput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
 
@@ -963,6 +978,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	 * @throws IllegalArgumentException
 	 */
 	public boolean isFirstCheckContactorOkInOngrid() throws IllegalArgumentException, OpenemsNamedException {
+		log.info("[Inside isFirstCheckContactorOkInOngrid]");
 		BooleanReadChannel digitalInput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
 
@@ -984,8 +1000,28 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 			return false;
 		}
 	}
+	
+	public boolean isSecondCheckRequestContactorFault() throws IllegalArgumentException, OpenemsNamedException {
+		log.info("[Inside isSecondCheckRequestContactorFault]");
+		BooleanReadChannel digitalInput1 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
+
+		BooleanReadChannel digitalInput2 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
+
+		Optional<Boolean> isdigitalInput1 = digitalInput1.value().asOptional();
+		Optional<Boolean> isdigitalInput2 = digitalInput2.value().asOptional();
+
+		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == true)
+				&& (isdigitalInput2.isPresent() && isdigitalInput2.get() == true)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 
 	public boolean isContactorOkInOffgrid() throws IllegalArgumentException, OpenemsNamedException {
+		log.info("[Inside isContactorOkInOffgrid]");
 		BooleanReadChannel digitalInput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
 
@@ -1011,7 +1047,9 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		}
 	}
 
-	public boolean isSecondCheckRequestContactorFault() throws IllegalArgumentException, OpenemsNamedException {
+
+	public boolean isFirstCheckContactorFault() throws IllegalArgumentException, OpenemsNamedException {
+		log.info("[Inside isFirstCheckContactorFault]");
 		BooleanReadChannel digitalInput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
 
@@ -1029,25 +1067,8 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		}
 	}
 
-	public boolean isFirstCheckContactorFault() throws IllegalArgumentException, OpenemsNamedException {
-		BooleanReadChannel digitalInput1 = this.componentManager
-				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
-
-		BooleanReadChannel digitalInput2 = this.componentManager
-				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
-
-		Optional<Boolean> isdigitalInput1 = digitalInput1.value().asOptional();
-		Optional<Boolean> isdigitalInput2 = digitalInput2.value().asOptional();
-
-		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == true)
-				&& (isdigitalInput2.isPresent() && isdigitalInput2.get() == false)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
 	public void digitalOutputAfterInverterOffInOngrid() throws IllegalArgumentException, OpenemsNamedException {
+		log.info("[Inside digitalOutputAfterInverterOffInOngrid *******************]");
 		BooleanWriteChannel digitaloutput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
 		this.setOutput(digitaloutput1, true);
@@ -1062,6 +1083,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	}
 
 	public void digitalOutputAfterInverterOffInOffgrid() throws IllegalArgumentException, OpenemsNamedException {
+		log.info("[Inside digitalOutputAfterInverterOffInOffgrid ------------------]");
 		BooleanWriteChannel digitaloutput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
 		this.setOutput(digitaloutput1, true);
