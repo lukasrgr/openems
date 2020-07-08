@@ -1,5 +1,7 @@
 package io.openems.edge.meter.janitza.umg604;
 
+import java.util.function.Consumer;
+
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -10,9 +12,6 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 
 import io.openems.common.channel.AccessMode;
@@ -26,11 +25,12 @@ import io.openems.edge.bridge.modbus.api.element.DummyRegisterElement;
 import io.openems.edge.bridge.modbus.api.element.FloatDoublewordElement;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.common.channel.Doc;
+import io.openems.edge.common.channel.value.Value;
 import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
 import io.openems.edge.common.modbusslave.ModbusSlaveTable;
 import io.openems.edge.common.taskmanager.Priority;
+import io.openems.edge.common.type.TypeUtils;
 import io.openems.edge.meter.api.AsymmetricMeter;
 import io.openems.edge.meter.api.MeterType;
 import io.openems.edge.meter.api.SymmetricMeter;
@@ -42,12 +42,9 @@ import io.openems.edge.meter.api.SymmetricMeter;
  * https://www.janitza.de/umg-604-pro.html
  */
 @Designate(ocd = Config.class, factory = true)
-@Component(name = "Meter.Janitza.UMG604", //
-		immediate = true, //
-		configurationPolicy = ConfigurationPolicy.REQUIRE, //
-		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE) //
+@Component(name = "Meter.Janitza.UMG604", immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE) //
 public class MeterJanitzaUmg604 extends AbstractOpenemsModbusComponent
-		implements SymmetricMeter, AsymmetricMeter, OpenemsComponent, EventHandler, ModbusSlave {
+		implements SymmetricMeter, AsymmetricMeter, OpenemsComponent, ModbusSlave {
 
 	private MeterType meterType = MeterType.PRODUCTION;
 
@@ -80,6 +77,7 @@ public class MeterJanitzaUmg604 extends AbstractOpenemsModbusComponent
 
 		super.activate(context, config.id(), config.alias(), config.enabled(), config.modbusUnitId(), this.cm, "Modbus",
 				config.modbus_id());
+
 	}
 
 	@Deactivate
@@ -91,8 +89,8 @@ public class MeterJanitzaUmg604 extends AbstractOpenemsModbusComponent
 		ACTIVE_POWER_SUM(Doc.of(OpenemsType.INTEGER) //
 				.unit(Unit.WATT)), //
 		CURRENT_SUM(Doc.of(OpenemsType.INTEGER) //
-				.unit(Unit.MILLIAMPERE)),
-		;
+				.unit(Unit.MILLIAMPERE)),;
+
 		private final Doc doc;
 
 		private ChannelId(Doc doc) {
@@ -111,12 +109,10 @@ public class MeterJanitzaUmg604 extends AbstractOpenemsModbusComponent
 
 	@Override
 	protected ModbusProtocol defineModbusProtocol() {
-		return new ModbusProtocol(this, //
+		ModbusProtocol modbusProtocol = new ModbusProtocol(this, //
 				new FC3ReadRegistersTask(1317, Priority.HIGH, //
-						m(new FloatDoublewordElement(1317))
-								.m(AsymmetricMeter.ChannelId.VOLTAGE_L1, ElementToChannelConverter.SCALE_FACTOR_3)//
-								.m(SymmetricMeter.ChannelId.VOLTAGE, ElementToChannelConverter.SCALE_FACTOR_3)//
-								.build(),
+						m(AsymmetricMeter.ChannelId.VOLTAGE_L1, new FloatDoublewordElement(1317), //
+								ElementToChannelConverter.SCALE_FACTOR_3), //
 						m(AsymmetricMeter.ChannelId.VOLTAGE_L2, new FloatDoublewordElement(1319), //
 								ElementToChannelConverter.SCALE_FACTOR_3), //
 						m(AsymmetricMeter.ChannelId.VOLTAGE_L3, new FloatDoublewordElement(1321), //
@@ -148,38 +144,70 @@ public class MeterJanitzaUmg604 extends AbstractOpenemsModbusComponent
 								ElementToChannelConverter.INVERT_IF_TRUE(this.invert)), //
 						m(AsymmetricMeter.ChannelId.REACTIVE_POWER_L3, new FloatDoublewordElement(1345), //
 								ElementToChannelConverter.INVERT_IF_TRUE(this.invert))), //
-				 // Testing
+				// Testing
 				new FC3ReadRegistersTask(1363, Priority.HIGH, //
 						m(ChannelId.CURRENT_SUM, new FloatDoublewordElement(1363), //
-								ElementToChannelConverter.SCALE_FACTOR_3_AND_INVERT_IF_TRUE(this.invert))),				
+								ElementToChannelConverter.SCALE_FACTOR_3_AND_INVERT_IF_TRUE(this.invert))),
 				new FC3ReadRegistersTask(1369, Priority.HIGH, //
 						m(ChannelId.ACTIVE_POWER_SUM, new FloatDoublewordElement(1369), //
 								ElementToChannelConverter.INVERT_IF_TRUE(this.invert))), //
 				new FC3ReadRegistersTask(1439, Priority.HIGH, //
 						m(SymmetricMeter.ChannelId.FREQUENCY, new FloatDoublewordElement(1439), //
 								ElementToChannelConverter.SCALE_FACTOR_3)));
+
+		this.calculateAverageVoltage();
+		this.calculateSumCurrent();
+		this.calculateSumPower();
+
+		return modbusProtocol;
 	}
 
-	@Override
-	public void handleEvent(Event event) {
-		if (!this.isEnabled()) {
-			return;
-		}
-		switch (event.getTopic()) {
-		case EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE:
+	/**
+	 * Calculate Average Voltage from current L1, L2 and L3.
+	 */
+	private void calculateAverageVoltage() {
+		final Consumer<Value<Integer>> calculateAverageVoltage = ignore -> {
+			this._setVoltage(TypeUtils.averageRounded(//
+					this.getVoltageL1Channel().getNextValue().get(), //
+					this.getVoltageL2Channel().getNextValue().get(), //
+					this.getVoltageL3Channel().getNextValue().get() //
+			));
+		};
+		this.getVoltageL1Channel().onSetNextValue(calculateAverageVoltage);
+		this.getVoltageL2Channel().onSetNextValue(calculateAverageVoltage);
+		this.getVoltageL3Channel().onSetNextValue(calculateAverageVoltage);
+	}
 
-			int currL1 = this.getCurrentL1().orElse(0);
-			int currL2 = this.getCurrentL2().orElse(0);
-			int currL3 = this.getCurrentL3().orElse(0);
-			this._setCurrent(currL1 + currL2 + currL3);
+	/**
+	 * Calculate Sum Current from Current L1, L2 and L3.
+	 */
+	private void calculateSumCurrent() {
+		final Consumer<Value<Integer>> calculateSumCurrent = ignore -> {
+			this._setCurrent(TypeUtils.sum(//
+					this.getCurrentL1Channel().getNextValue().get(), //
+					this.getCurrentL2Channel().getNextValue().get(), //
+					this.getCurrentL3Channel().getNextValue().get() //
+			));
+		};
+		this.getCurrentL1Channel().onSetNextValue(calculateSumCurrent);
+		this.getCurrentL2Channel().onSetNextValue(calculateSumCurrent);
+		this.getCurrentL3Channel().onSetNextValue(calculateSumCurrent);
+	}
 
-			int powerL1 = this.getActivePowerL1().orElse(0);
-			int powerL2 = this.getActivePowerL2().orElse(0);
-			int powerL3 = this.getActivePowerL3().orElse(0);
-			this._setActivePower(powerL1 + powerL2 + powerL3);
-
-			break;
-		}
+	/**
+	 * Calculate Sum Power from current L1, L2 and L3.
+	 */
+	private void calculateSumPower() {
+		final Consumer<Value<Integer>> calculateSumPower = ignore -> {
+			this._setCurrent(TypeUtils.sum(//
+					this.getActivePowerL1Channel().getNextValue().get(), //
+					this.getActivePowerL2Channel().getNextValue().get(), //
+					this.getActivePowerL3Channel().getNextValue().get() //
+			));
+		};
+		this.getActivePowerL1Channel().onSetNextValue(calculateSumPower);
+		this.getActivePowerL2Channel().onSetNextValue(calculateSumPower);
+		this.getActivePowerL3Channel().onSetNextValue(calculateSumPower);
 	}
 
 	@Override
