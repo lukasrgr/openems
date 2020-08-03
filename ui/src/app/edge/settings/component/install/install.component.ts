@@ -35,6 +35,7 @@ export class ComponentInstallComponent implements OnInit {
       this.edge = edge;
     });
     let factoryId = this.route.snapshot.params["factoryId"];
+    console.log("factoryID", factoryId)
     this.service.getConfig().then(config => {
       this.factoryId = factoryId;
       this.factory = config.factories[factoryId];
@@ -86,17 +87,18 @@ export class ComponentInstallComponent implements OnInit {
   public submit() {
     let properties: { name: string, value: any }[] = [];
     for (let controlKey in this.form.controls) {
+      console.log("controlKey", controlKey)
       let control = this.form.controls[controlKey];
       let property_id = controlKey.replace('_', '.');
       properties.push({ name: property_id, value: control.value });
     }
-
-    this.edge.createComponentConfig(this.websocket, this.factoryId, properties).then(response => {
-      this.form.markAsPristine();
-      this.service.toast("Successfully created in instance of " + this.factoryId + ".", 'success');
-    }).catch(reason => {
-      this.service.toast("Error creating an instance of " + this.factoryId + ":" + reason.error.message, 'danger');
-    });
+    console.log("ERSTELLT MIT: factoryID: ", this.factoryId, " properties: ", properties)
+    // this.edge.createComponentConfig(this.websocket, this.factoryId, properties).then(response => {
+    //   this.form.markAsPristine();
+    //   this.service.toast("Successfully created in instance of " + this.factoryId + ".", 'success');
+    // }).catch(reason => {
+    //   this.service.toast("Error creating an instance of " + this.factoryId + ":" + reason.error.message, 'danger');
+    // });
   }
 
 }
