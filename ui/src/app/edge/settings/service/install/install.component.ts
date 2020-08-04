@@ -1,12 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { environment } from '../../../../../environments';
-import { Edge, EdgeConfig, Service, Websocket, Utils } from '../../../../shared/shared';
-import { HeatingElementComponent } from 'src/app/edge/live/heatingelement/heatingelement.component';
-import { TranslateService } from '@ngx-translate/core';
+import { Edge, EdgeConfig, Service, ChannelAddress, Websocket, Utils } from '../../../../shared/shared';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { FormGroup } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
 import { ModalController } from '@ionic/angular';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: InstallComponent.SELECTOR,
@@ -14,240 +11,173 @@ import { ModalController } from '@ionic/angular';
 })
 export class InstallComponent {
 
-  public form = null;
-
-  public typeForm = null;
-  public communicationForm = null;
-  public appForm = null;
-
-  public model = null;
-  public fields: FormlyFieldConfig[] = null;
-  public factory: EdgeConfig.Factory = null;
-  private factoryId: string = null;
-
-  private static readonly SELECTOR = "service";
-
-  public env = environment;
-
-  public edge: Edge = null;
+  @Input() public edge: Edge;
   public config: EdgeConfig = null;
 
+  public factory: EdgeConfig.Factory = null;
+
+
+  private static readonly SELECTOR = "serviceState";
+
+  public subscribedChannels: ChannelAddress[] = [];
+  public components: EdgeConfig.Component[] = [];
+
+
+
   constructor(
-    private service: Service,
-    private translate: TranslateService,
-    private websocket: Websocket,
     private route: ActivatedRoute,
+    private service: Service,
     public modalCtrl: ModalController,
+    private websocket: Websocket,
   ) { }
 
-  ngOnInit() {
-    this.service.setCurrentComponent('', this.route).then(edge => {
-      this.edge = edge;
-    });
-  }
-
-  gatherType() {
-    let factoryId = 'IO.KMtronic'
-    this.service.getConfig().then(config => {
-      this.factoryId = factoryId;
-      this.factory = config.factories[factoryId];
-      let fields: FormlyFieldConfig[] = [];
-      let model = {};
-      for (let property of this.factory.properties) {
-        let property_id = property.id.replace('.', '_');
-        let field: FormlyFieldConfig = {
-          key: property_id,
-          type: 'input',
-          templateOptions: {
-            label: property.name,
-            description: property.description
-          }
-        }
-        // add Property Schema 
-        Utils.deepCopy(property.schema, field);
-        fields.push(field);
-        if (property.defaultValue != null) {
-          model[property_id] = property.defaultValue;
-
-          // Set the next free Component-ID as defaultValue
-          if (property_id == 'id') {
-            let thisMatch = property.defaultValue.match(/^(.*)(\d+)$/);
-            if (thisMatch) {
-              let thisPrefix = thisMatch[1];
-              let highestSuffix = Number.parseInt(thisMatch[2]);
-              for (let componentId of Object.keys(config.components)) {
-                let componentMatch = componentId.match(/^(.*)(\d+)$/);
-                if (componentMatch) {
-                  let componentPrefix = componentMatch[1];
-                  if (componentPrefix === thisPrefix) {
-                    let componentSuffix = Number.parseInt(componentMatch[2]);
-                    highestSuffix = Math.max(highestSuffix, componentSuffix + 1);
-                  }
-                }
-              }
-              model[property_id] = thisPrefix + highestSuffix;
-            }
-          }
-        }
+  // used to assemble properties out of created fields and model from gather methods
+  private createProperties(fields: FormlyFieldConfig[], model): { name: string, value: any }[] {
+    let result: { name: string, value: any }[] = [];
+    fields.forEach(field => {
+      if (field.key == 'alias') {
+        result.push({ name: 'alias', value: '' })
       }
-      this.typeForm = new FormGroup({});
-      this.fields = fields;
-      this.model = model;
-      console.log("TYP-FORM", this.typeForm)
-      console.log("FIELDS", fields)
-      console.log("MODEL", model)
+      Object.keys(model).forEach(modelKey => {
+        if (field.key == modelKey) {
+          result.push({ name: field.key.toString(), value: model[modelKey] })
+        }
+      })
     })
+    return result;
   }
 
-  submitType() {
-    let properties: { name: string, value: any }[] = [];
-    for (let controlKey in this.typeForm.controls) {
-      let control = this.typeForm.controls[controlKey];
-      let property_id = controlKey.replace('_', '.');
-      properties.push({ name: property_id, value: control.value });
-    }
-    console.log("ERSTELLT MIT: factoryID: ", this.factoryId, " properties: ", properties)
-  }
-
-  gatherCommunication() {
-    let factoryId = 'Bridge.Modbus.Serial';
-    this.service.getConfig().then(config => {
-      this.factoryId = factoryId;
-      this.factory = config.factories[factoryId];
-      let fields: FormlyFieldConfig[] = [];
-      let model = {};
-      for (let property of this.factory.properties) {
-        let property_id = property.id.replace('.', '_');
-        let field: FormlyFieldConfig = {
-          key: property_id,
-          type: 'input',
-          templateOptions: {
-            label: property.name,
-            description: property.description
-          }
-        }
-        // add Property Schema 
-        Utils.deepCopy(property.schema, field);
-        fields.push(field);
-        if (property.defaultValue != null) {
-          model[property_id] = property.defaultValue;
-
-          // Set the next free Component-ID as defaultValue
-          if (property_id == 'id') {
-            let thisMatch = property.defaultValue.match(/^(.*)(\d+)$/);
-            if (thisMatch) {
-              let thisPrefix = thisMatch[1];
-              let highestSuffix = Number.parseInt(thisMatch[2]);
-              for (let componentId of Object.keys(config.components)) {
-                let componentMatch = componentId.match(/^(.*)(\d+)$/);
-                if (componentMatch) {
-                  let componentPrefix = componentMatch[1];
-                  if (componentPrefix === thisPrefix) {
-                    let componentSuffix = Number.parseInt(componentMatch[2]);
-                    highestSuffix = Math.max(highestSuffix, componentSuffix + 1);
-                  }
-                }
-              }
-              model[property_id] = thisPrefix + highestSuffix;
-            }
-          }
+  private gatherType(config: EdgeConfig): { name: string, value: any }[] {
+    let factoryId = 'IO.KMtronic'
+    this.factory = config.factories[factoryId];
+    let fields: FormlyFieldConfig[] = [];
+    let model = {};
+    for (let property of this.factory.properties) {
+      let property_id = property.id.replace('.', '_');
+      let field: FormlyFieldConfig = {
+        key: property_id,
+        type: 'input',
+        templateOptions: {
+          label: property.name,
+          description: property.description
         }
       }
-      this.communicationForm = new FormGroup({});
-      this.fields = fields;
-      this.model = model;
-    });
-    console.log("COMMUNICATION-FORM", this.communicationForm)
-    console.log("FIELDS", this.fields)
-    console.log("MODEL", this.model)
-  }
-
-  submitCommunication() {
-    let properties: { name: string, value: any }[] = [];
-    for (let controlKey in this.communicationForm.controls) {
-      let control = this.form.controls[controlKey];
-      let property_id = controlKey.replace('_', '.');
-      properties.push({ name: property_id, value: control.value });
+      // add Property Schema 
+      Utils.deepCopy(property.schema, field);
+      fields.push(field);
+      if (property.defaultValue != null) {
+        model[property_id] = property.defaultValue;
+        // sets costum modbus-id
+        if (property.name == 'Modbus-ID') {
+          model[property_id] = 'modbus10';
+        }
+      }
     }
-    console.log("ERSTELLT MIT: factoryID: ", this.factoryId, " properties: ", properties)
+    let properties = this.createProperties(fields, model);
+    return properties;
   }
 
-  gatherApp() {
+  private gatherApp(config: EdgeConfig): { name: string, value: any }[] {
     let factoryId = 'Controller.IO.HeatingElement';
-    this.service.getConfig().then(config => {
-      this.factoryId = factoryId;
-      this.factory = config.factories[factoryId];
-      let fields: FormlyFieldConfig[] = [];
-      let model = {};
-      for (let property of this.factory.properties) {
-        let property_id = property.id.replace('.', '_');
-        let field: FormlyFieldConfig = {
-          key: property_id,
-          type: 'input',
-          templateOptions: {
-            label: property.name,
-            description: property.description
-          }
-        }
-        // add Property Schema 
-        Utils.deepCopy(property.schema, field);
-        fields.push(field);
-        if (property.defaultValue != null) {
-          model[property_id] = property.defaultValue;
-
-          // Set the next free Component-ID as defaultValue
-          if (property_id == 'id') {
-            let thisMatch = property.defaultValue.match(/^(.*)(\d+)$/);
-            if (thisMatch) {
-              let thisPrefix = thisMatch[1];
-              let highestSuffix = Number.parseInt(thisMatch[2]);
-              for (let componentId of Object.keys(config.components)) {
-                let componentMatch = componentId.match(/^(.*)(\d+)$/);
-                if (componentMatch) {
-                  let componentPrefix = componentMatch[1];
-                  if (componentPrefix === thisPrefix) {
-                    let componentSuffix = Number.parseInt(componentMatch[2]);
-                    highestSuffix = Math.max(highestSuffix, componentSuffix + 1);
-                  }
-                }
-              }
-              model[property_id] = thisPrefix + highestSuffix;
-            }
-          }
+    this.factory = config.factories[factoryId];
+    let fields: FormlyFieldConfig[] = [];
+    let model = {};
+    for (let property of this.factory.properties) {
+      let property_id = property.id.replace('.', '_');
+      let field: FormlyFieldConfig = {
+        key: property_id,
+        type: 'input',
+        templateOptions: {
+          label: property.name,
+          description: property.description
         }
       }
-      this.appForm = new FormGroup({});
-      this.fields = fields;
-      this.model = model;
+      // add Property Schema 
+      Utils.deepCopy(property.schema, field);
+      fields.push(field);
+      if (property.defaultValue != null) {
+        model[property_id] = property.defaultValue;
+      }
+    }
+    let properties = this.createProperties(fields, model);
+    return properties;
+  }
+
+  private gatherCommunication(config: EdgeConfig): { name: string, value: any }[] {
+    let factoryId = 'Bridge.Modbus.Serial';
+    this.factory = config.factories[factoryId];
+    let fields: FormlyFieldConfig[] = [];
+    let model = {};
+    for (let property of this.factory.properties) {
+      let property_id = property.id.replace('.', '_');
+      let field: FormlyFieldConfig = {
+        key: property_id,
+        type: 'input',
+        templateOptions: {
+          label: property.name,
+          description: property.description
+        }
+      }
+      // add Property Schema 
+      Utils.deepCopy(property.schema, field);
+      fields.push(field);
+      if (property.defaultValue != null) {
+        model[property_id] = property.defaultValue;
+        // sets costum component id
+        if (property.name == 'Component-ID') {
+          model[property_id] = 'modbus10';
+        }
+      }
+    }
+    let properties = this.createProperties(fields, model);
+    return properties;
+  }
+
+  addHeatingElement() {
+    this.edge.createComponentConfig(this.websocket, 'Bridge.Modbus.Serial', this.gatherCommunication(this.config)).then(() => {
+      this.edge.createComponentConfig(this.websocket, 'IO.KMtronic', this.gatherType(this.config)).then(() => {
+        this.edge.createComponentConfig(this.websocket, 'Controller.IO.HeatingElement', this.gatherApp(this.config)).then(() => {
+          this.service.toast("Heizstab APP erfolgreich hinzugefügt", 'success');
+        }).catch(reason => {
+          this.service.toast("Error creating an instance of " + 'Controller.IO.HeatingElement' + ":" + reason.error.message, 'danger');
+        })
+      }).catch(reason => {
+        this.service.toast("Error creating an instance of " + 'IO.KMtronic' + ":" + reason.error.message, 'danger');
+      })
+    }).catch(reason => {
+      this.service.toast("Error creating an instance of " + 'Bridge.Modbus.Serial' + ":" + reason.error.message, 'danger');
     });
-    console.log("APP-FORM", this.appForm)
-    console.log("FIELDS", this.fields)
-    console.log("MODEL", this.model)
   }
 
-  submitApp() {
-    let properties: { name: string, value: any }[] = [];
-    for (let controlKey in this.typeForm.controls) {
-      let control = this.appForm.controls[controlKey];
-      let property_id = controlKey.replace('_', '.');
-      properties.push({ name: property_id, value: control.value });
-    }
-    console.log("ERSTELLT MIT: factoryID: ", this.factoryId, " properties: ", properties)
+  ionViewDidEnter() {
+    this.service.getConfig().then(config => {
+      this.config = config;
+    });
   }
 
-  public submit() {
-    let properties: { name: string, value: any }[] = [];
-    for (let controlKey in this.form.controls) {
-      let control = this.form.controls[controlKey];
-      let property_id = controlKey.replace('_', '.');
-      properties.push({ name: property_id, value: control.value });
-    }
-    console.log("ERSTELLT MIT: factoryID: ", this.factoryId, " properties: ", properties)
-    // this.edge.createComponentConfig(this.websocket, this.factoryId, properties).then(response => {
-    //   this.form.markAsPristine();
-    //   this.service.toast("Successfully created in instance of " + this.factoryId + ".", 'success');
-    // }).catch(reason => {
-    //   this.service.toast("Error creating an instance of " + this.factoryId + ":" + reason.error.message, 'danger');
-    // });
+  gatherAddedComponentsChannels() {
+    this.config.getComponentsByFactory('Bridge.Modbus.Serial').forEach(component => {
+      if (component.id == 'modbus10') {
+        this.components.push(component)
+      }
+    })
+    this.config.getComponentsByFactory('IO.KMtronic').forEach(component => {
+      if (component.properties['modbus.id'] == 'modbus10') {
+        this.components.push(component)
+      }
+    })
+    this.config.getComponentsByFactory('Controller.IO.HeatingElement').forEach(component => {
+      this.components.push(component)
+    })
+    this.components.forEach(component => {
+      this.subscribedChannels.push(
+        new ChannelAddress(component.id, 'State')
+      )
+    })
+    this.edge.subscribeChannels(this.websocket, 'serviceState', this.subscribedChannels)
+  }
+
+  ionViewDidLeave() {
+    this.edge.unsubscribeChannels(this.websocket, 'serviceState')
   }
 }
