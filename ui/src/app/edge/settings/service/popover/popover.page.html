@@ -1,0 +1,24 @@
+<ion-card-content>
+    <p translate>Edge.Config.Service.Heatingelement.sureToInstall</p><br>
+    <p translate>Edge.Config.Service.Heatingelement.checkPeriphery</p>
+    <ion-row class="ion-justify-content-center">
+        <ion-text *ngIf="service.translate.currentLang == 'German'" color="primary"> <a target="_blank"
+                href="https://docs.fenecon.de/de/_/latest/_attachments/FEMS_App_Heizstab_6kW_Installations-_und_Benutzerhandbuch.pdf"
+                translate>Edge.Config.Service.ibnLink</a></ion-text>
+        <ion-text *ngIf="service.translate.currentLang != 'German'" color="primary"> <a target="_blank"
+                href="https://docs.fenecon.de/en/_/latest/_attachments/FEMS_App_Heizstab_6kW_Installations-_und_Benutzerhandbuch.pdf"
+                translate>Edge.Config.Service.ibnLink</a></ion-text>
+    </ion-row>
+    <ion-row class="ion-padding-top ion-justify-content-center">
+        <ion-col size="4">
+            <ion-button expand="full" (click)="popoverController.dismiss(true)" translate>
+                General.ok
+            </ion-button>
+        </ion-col>
+        <ion-col size="8">
+            <ion-button expand="full" (click)="popoverController.dismiss()" translate>
+                General.cancel
+            </ion-button>
+        </ion-col>
+    </ion-row>
+</ion-card-content>

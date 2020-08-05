@@ -313,6 +313,16 @@ export const TRANSLATION = {
             Bridge: {
                 newConnection: 'Nieuwe verbinding...',
                 newDevice: 'Nieuw apparaat…',
+            },
+            Service: {
+                ibnLink: 'IBN zur App',
+                configStatus: 'Installatiestatus',
+                checkConfig: 'Controleer Installatie...',
+                Heatingelement: {
+                    sureToInstall: 'Weet u zeker dat u de verwarmingselement-app wilt installeren?',
+                    checkPeriphery: 'Controleer voordat u verdergaat of u het verwarmingselement correct heeft aangesloten en of de relaiskaart toegankelijk is.',
+                    configurationWorking: 'Heizstab App is correct geïnstalleerd!'
+                }
             }
         }
     },

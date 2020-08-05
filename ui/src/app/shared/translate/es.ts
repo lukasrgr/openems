@@ -316,6 +316,16 @@ export const TRANSLATION = {
             Bridge: {
                 newConnection: 'Nueva conexión...',
                 newDevice: 'Nuevo dispositivo...',
+            },
+            Service: {
+                ibnLink: 'Documentación de Instalación',
+                configStatus: 'Estado de Instalación',
+                checkConfig: 'Verificar Instalación...',
+                Heatingelement: {
+                    sureToInstall: '¿Está seguro de que desea instalar la aplicación de elemento calefactor?',
+                    checkPeriphery: 'Antes de continuar, asegúrese de haber conectado correctamente el elemento calefactor y de que se pueda acceder a la placa de relés.',
+                    configurationWorking: 'La aplicación Heizstab está instalada correctamente!'
+                }
             }
         }
     },

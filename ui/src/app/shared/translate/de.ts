@@ -221,7 +221,7 @@ export const TRANSLATION = {
                     activeLevel: 'Aktives Level',
                     endtime: 'Endzeit',
                     energy: 'Energie',
-                    heatingelement: 'Heizelement',
+                    heatingelement: 'Heizstab',
                     minimalEnergyAmount: 'Minimale Energiemenge',
                     minimumRunTime: 'Mindestlaufzeit',
                     priority: 'Priorität',
@@ -320,6 +320,16 @@ export const TRANSLATION = {
             Bridge: {
                 newConnection: 'Neue Verbindung...',
                 newDevice: 'Neues Gerät...',
+            },
+            Service: {
+                ibnLink: 'IBN zur App',
+                configStatus: 'Installations-Status',
+                checkConfig: 'Überprüfe Installation...',
+                Heatingelement: {
+                    sureToInstall: 'Möchten Sie die Heizstab App wirklich installieren?',
+                    checkPeriphery: 'Bevor Sie fortfahren, stellen Sie sicher, dass Sie den Heizstab korrekt angeschlossen haben und das Relaisboard erreichbar ist.',
+                    configurationWorking: 'Heizstab App ist korrekt installiert!'
+                }
             }
         }
     },

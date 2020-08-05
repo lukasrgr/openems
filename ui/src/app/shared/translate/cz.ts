@@ -319,6 +319,16 @@ export const TRANSLATION = {
             Bridge: {
                 newConnection: 'Nové připojení...',
                 newDevice: 'Nové zařízení...',
+            },
+            Service: {
+                ibnLink: 'Instalace dokumentace',
+                configStatus: 'Stav Konfigurace',
+                checkConfig: 'Zkontrolujte Instalaci...',
+                Heatingelement: {
+                    sureToInstall: 'Opravdu chcete nainstalovat aplikaci topného článku??',
+                    checkPeriphery: 'Před pokračováním se ujistěte, že jste správně připojili topné těleso a že deska relé je přístupná.',
+                    configurationWorking: 'Aplikace Topný článek je nainstalována správně!'
+                }
             }
         }
     },

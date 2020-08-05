@@ -320,6 +320,16 @@ export const TRANSLATION = {
             Bridge: {
                 newConnection: 'New connection...',
                 newDevice: 'New device...',
+            },
+            Service: {
+                ibnLink: 'Installation Documentation',
+                configStatus: 'Installation-Status',
+                checkConfig: 'Checking Installation...',
+                Heatingelement: {
+                    sureToInstall: 'Are you sure you want to install the Heating Element app?',
+                    checkPeriphery: 'Before proceeding, make sure that you have connected the Heating Element correctly and that the relay board is accessible.',
+                    configurationWorking: 'Heating Element App is installed correctly!'
+                }
             }
         }
     },
