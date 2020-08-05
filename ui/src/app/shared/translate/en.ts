@@ -286,6 +286,7 @@ export const TRANSLATION = {
                 simulator: 'Simulator',
                 systemExecute: 'Execute system command',
                 systemProfile: 'System Profile',
+                service: 'FEMS-App Assistant',
             },
             More: {
                 manualCommand: 'Manual command',

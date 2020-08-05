@@ -285,6 +285,7 @@ export const TRANSLATION = {
                 simulator: 'Simulátor',
                 systemExecute: 'Spusťte příkaz systému',
                 systemProfile: 'Systémový Profil',
+                service: 'FEMS-App Assistant',
             },
             More: {
                 manualCommand: 'Manuální příkaz ',

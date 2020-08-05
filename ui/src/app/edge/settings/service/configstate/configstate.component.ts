@@ -3,6 +3,8 @@ import { Edge, EdgeConfig, Service, ChannelAddress, Websocket } from '../../../.
 import { ModalController } from '@ionic/angular';
 import { Subject, BehaviorSubject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { ActivatedRoute } from '@angular/router';
+import { isNumber, isUndefined } from 'util';
 
 @Component({
   selector: ConfigStateComponent.SELECTOR,
@@ -10,9 +12,8 @@ import { takeUntil } from 'rxjs/operators';
 })
 export class ConfigStateComponent {
 
-  @Input() public edge: Edge;
-
   public loading = true;
+  public edge: Edge = null;
   private stopOnDestroy: Subject<void> = new Subject<void>();
 
   private static readonly SELECTOR = "configState";
@@ -28,25 +29,34 @@ export class ConfigStateComponent {
   ) { }
 
   ionViewDidEnter() {
-    setTimeout(() => {
-      this.loading = false;
-    }, 5000);
-
+    this.service.getCurrentEdge().then(edge => {
+      this.edge = edge;
+    })
     this.gatherAddedComponentsChannels();
-
     this.edge.currentData.pipe(takeUntil(this.stopOnDestroy)).subscribe(currentData => {
-      let sumState = 0;
-      this.components.forEach(component => {
-        let state = currentData.channel[component.id + '/State'];
-        if (state >= 0) {
-          sumState += state;
+      let workState = 0;
+      let errorState = 0;
+      if (this.components.length == 3) {
+        this.components.forEach(component => {
+          let state = currentData.channel[component.id + '/State'];
+          if (!isUndefined(state)) {
+            if (state == 0) {
+              workState += 1;
+            }
+            if (state > 0) {
+              errorState += 1;
+            }
+          }
+        })
+        if (workState == 3) {
+          this.loading = false;
+          this.appWorking.next(true);
         }
-      })
-      if (sumState == 0) {
-        this.appWorking.next(true);
-        return
+        if (errorState > 0) {
+          this.loading = false;
+          this.appWorking.next(false);
+        }
       }
-      this.appWorking.next(false);
     })
   }
 

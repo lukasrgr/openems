@@ -5,6 +5,7 @@ import { Edge, EdgeConfig, Service, Utils, Websocket } from '../../../shared/sha
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { ModalController, PopoverController } from '@ionic/angular';
 import { ServicePopoverComponent } from './popover/popover.page';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: ServiceComponent.SELECTOR,
@@ -27,10 +28,11 @@ export class ServiceComponent {
     private websocket: Websocket,
     public modalCtrl: ModalController,
     public popoverController: PopoverController,
+    private translate: TranslateService,
   ) { }
 
   ngOnInit() {
-    this.service.setCurrentComponent('service', this.route).then(edge => {
+    this.service.setCurrentComponent(this.translate.instant('Edge.Config.Index.service'), this.route).then(edge => {
       this.edge = edge;
     });
     this.service.getConfig().then(config => {
@@ -145,7 +147,10 @@ export class ServiceComponent {
       this.edge.createComponentConfig(this.websocket, 'IO.KMtronic', this.gatherType(this.config)).then(() => {
         this.edge.createComponentConfig(this.websocket, 'Controller.IO.HeatingElement', this.gatherApp(this.config)).then(() => {
           this.service.toast("Heizstab APP erfolgreich hinzugefügt", 'success');
-          this.presentModal();
+          this.loading = true;
+          setTimeout(() => {
+            this.presentModal();
+          }, 5000);
         }).catch(reason => {
           if (reason.error.code == 1) {
             this.service.toast("Heizstab existiert bereits!", 'danger');
@@ -190,6 +195,9 @@ export class ServiceComponent {
         edge: this.edge,
       }
     });
+    modal.onDidDismiss().then(() => {
+      this.loading = false;
+    })
     return await modal.present();
   }
 }

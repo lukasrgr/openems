@@ -279,6 +279,7 @@ export const TRANSLATION = {
                 simulator: 'Simulator',
                 systemExecute: 'Voer systeemopdracht uit',
                 systemProfile: 'Systeemprofiel',
+                service: 'FEMS-App Assistant'
             },
             More: {
                 manualCommand: 'Handmatig commando',
