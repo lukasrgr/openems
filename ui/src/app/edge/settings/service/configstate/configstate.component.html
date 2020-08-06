@@ -10,20 +10,48 @@
 </ion-header>
 
 <ion-content>
-  <ion-card-content>
-    <ion-grid *ngIf="loading == true">
+  <!-- <ion-card-content>
+    <ion-grid *ngIf="checkConfig == true">
       <ion-row class="ion-justify-content-center">
-        <ion-card-title translate>Edge.Config.Service.checkConfig</ion-card-title>
+        <ion-card-title>Überprüfe aktuelle Konfiguration..</ion-card-title>
       </ion-row>
-      <ion-row class="ion-padding-top">
-        <ion-progress-bar type="indeterminate"></ion-progress-bar>
+      <ion-progress-bar type="indeterminate"></ion-progress-bar>
+    </ion-grid>
+  </ion-card-content> -->
+
+  <ion-card-content *ngIf="loading == true">
+    <ion-grid>
+      <ion-progress-bar type="indeterminate"></ion-progress-bar>
+      <ion-row *ngFor="let string of loadingStrings" class="ion-justify-content-center">
+        <ion-label class="ion-text-center">{{ string }}</ion-label>
       </ion-row>
     </ion-grid>
   </ion-card-content>
 
-  <ion-card-content *ngIf="loading == false && appWorking.getValue() == false">
+  <ion-card-content *ngIf="showInit == true">
+    <ion-grid>
+      <ion-card-title translate class="ion-text-center">Edge.Config.Service.Heatingelement.sureToInstall
+      </ion-card-title>
+      <ion-row class="ion-justify-content-center">
+        <ion-label class="ion-text-center ion-padding-top" translate>
+          Edge.Config.Service.Heatingelement.checkPeriphery<br>
+          <ion-text *ngIf="service.translate.currentLang == 'German'" color="primary"> <a target="_blank"
+              href="https://docs.fenecon.de/de/_/latest/_attachments/FEMS_App_Heizstab_6kW_Installations-_und_Benutzerhandbuch.pdf"
+              translate>Edge.Config.Service.ibnLink</a></ion-text>
+          <ion-text *ngIf="service.translate.currentLang != 'German'" color="primary"> <a target="_blank"
+              href="https://docs.fenecon.de/en/_/latest/_attachments/FEMS_App_Heizstab_6kW_Installations-_und_Benutzerhandbuch.pdf"
+              translate>Edge.Config.Service.ibnLink</a></ion-text>
+        </ion-label>
+        <ion-button (click)="addHeatingElementComponents()">Ok</ion-button>
+        <ion-button (click)="modalCtrl.dismiss()">Abbrechen</ion-button>
+        <ion-button (click)="gatherAddedComponents()">gather</ion-button>
+      </ion-row>
+    </ion-grid>
+  </ion-card-content>
+
+  <ion-card-content *ngIf="running == true">
     <ion-list>
-      <ng-container *ngIf=" edge.currentData | async as currentData">
+      <ng-container *ngIf="edge.currentData | async as currentData">
         <ng-container *ngFor="let component of components" [ngSwitch]="component.factoryId">
           <ion-item>
             <ion-label class="ion-text-wrap">
@@ -74,9 +102,5 @@
         </ng-container>
       </ng-container>
     </ion-list>
-  </ion-card-content>
-
-  <ion-card-content *ngIf="loading == false && appWorking.getValue() == true" class="ion-text-center">
-    <ion-card-title translate>Edge.Config.Service.Heatingelement.configurationWorking</ion-card-title>
   </ion-card-content>
 </ion-content>
