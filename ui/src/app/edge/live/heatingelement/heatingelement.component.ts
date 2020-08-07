@@ -1,6 +1,6 @@
 import { ActivatedRoute } from '@angular/router';
 import { ChannelAddress, Edge, EdgeConfig, Service, Websocket } from '../../../shared/shared';
-import { Component, Input, Output } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { HeatingElementModalComponent } from './modal/modal.component';
 import { ModalController } from '@ionic/angular';
 import { Subject, BehaviorSubject } from 'rxjs';
@@ -34,8 +34,9 @@ export class HeatingElementComponent {
     ) { }
 
     ngOnInit() {
-        this.service.setCurrentComponent('', this.route).then(edge => {
+        this.service.getCurrentEdge().then(edge => {
             this.edge = edge;
+        }).then(() => {
             this.service.getConfig().then(config => {
                 this.component = config.components[this.componentId];
                 this.outputChannelPhaseOne = ChannelAddress.fromString(
@@ -44,13 +45,13 @@ export class HeatingElementComponent {
                     this.component.properties['outputChannelPhaseL2']);
                 this.outputChannelPhaseThree = ChannelAddress.fromString(
                     this.component.properties['outputChannelPhaseL3']);
-                edge.subscribeChannels(this.websocket, HeatingElementComponent.SELECTOR + this.componentId, [
+                this.edge.subscribeChannels(this.websocket, HeatingElementComponent.SELECTOR + this.componentId, [
                     this.outputChannelPhaseOne,
                     this.outputChannelPhaseTwo,
                     this.outputChannelPhaseThree,
                     new ChannelAddress(this.component.id, 'ForceStartAtSecondsOfDay'),
                 ]);
-                edge.currentData.pipe(takeUntil(this.stopOnDestroy)).subscribe(currentData => {
+                this.edge.currentData.pipe(takeUntil(this.stopOnDestroy)).subscribe(currentData => {
                     let outputChannelArray = [this.outputChannelPhaseOne, this.outputChannelPhaseTwo, this.outputChannelPhaseThree];
                     let value = 0;
                     outputChannelArray.forEach(element => {

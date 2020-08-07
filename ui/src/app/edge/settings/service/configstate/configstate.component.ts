@@ -1,12 +1,10 @@
-import { Component, Input } from '@angular/core';
+import { Component } from '@angular/core';
 import { Edge, EdgeConfig, Service, ChannelAddress, Websocket, Utils } from '../../../../shared/shared';
 import { ModalController } from '@ionic/angular';
 import { Subject, BehaviorSubject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { ActivatedRoute } from '@angular/router';
-import { isNumber, isUndefined } from 'util';
+import { isUndefined } from 'util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: ConfigStateComponent.SELECTOR,
@@ -17,23 +15,24 @@ export class ConfigStateComponent {
   public loading = true;
   public running = false;
   public showInit: boolean = false;
-  public loadingStrings = [];
+  public appWorking: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
+  public loadingStrings: { string: string, type: string }[] = [];
+  public subscribedChannels: ChannelAddress[] = [];
+  public components: EdgeConfig.Component[] = [];
+
+  public heatingElementId = null;
   public edge: Edge = null;
   public config: EdgeConfig = null;
   private stopOnDestroy: Subject<void> = new Subject<void>();
 
   private static readonly SELECTOR = "configState";
 
-  public subscribedChannels: ChannelAddress[] = [];
-  public components: EdgeConfig.Component[] = [];
-  public appWorking: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
   constructor(
     public service: Service,
     public modalCtrl: ModalController,
     private websocket: Websocket,
-    private translate: TranslateService,
   ) { }
 
   ngOnInit() {
@@ -47,14 +46,21 @@ export class ConfigStateComponent {
           break;
         }
         case 1: {
+          this.loadingStrings.push({ string: 'Es konnten nicht alle Komponenten gefunden werden', type: 'danger' });
+          setTimeout(() => {
+            this.addHeatingElementComponents();
+          }, 2000);
           break;
         }
         case 2: {
+          this.loadingStrings.push({ string: 'Es konnten nicht alle Komponenten gefunden werden', type: 'danger' });
+          setTimeout(() => {
+            this.addHeatingElementComponents();
+          }, 2000);
           break;
         }
         case 3: {
-          this.loading = false;
-          this.running = true;
+          this.gatherAddedComponentsIntoArray();
           break;
         }
       }
@@ -169,60 +175,86 @@ export class ConfigStateComponent {
     return properties;
   }
 
-  addHeatingElementComponents() {
+  public addHeatingElementComponents() {
     this.loading = true;
     this.showInit = false;
-    this.loadingStrings.push('Versuche IO.KMtronic hinzuzufügen..')
-    this.edge.createComponentConfig(this.websocket, 'IO.KMtronic', this.gatherType(this.config)).then(response => {
-      this.loadingStrings.push('IO.KMtronic erfolgreich hinzugefügt')
+
+    this.loadingStrings.push({ string: 'Versuche Bridge.Modbus.Serial hinzuzufügen..', type: 'setup' });
+    this.loadingStrings.push({ string: 'Versuche IO.KMtronic hinzuzufügen..', type: 'setup' });
+    this.loadingStrings.push({ string: 'Versuche Controller.IO.HeatingElement hinzuzufügen..', type: 'setup' });
+
+    this.edge.createComponentConfig(this.websocket, 'Bridge.Modbus.Serial', this.gatherCommunication(this.config)).then(() => {
+      setTimeout(() => {
+        this.loadingStrings.push({ string: 'Bridge.Modbus.Serial wird hinzugefügt', type: 'success' });
+      }, 2000);
     }).catch(reason => {
       if (reason.error.code == 1) {
-        this.loadingStrings.push('IO.KMtronic existiert bereits!');
+        setTimeout(() => {
+          this.loadingStrings.push({ string: 'Bridge.Modbus.Serial existiert bereits', type: 'danger' });
+        }, 2000);
         return;
       }
-      this.loadingStrings.push('Fehler IO.KMtronic hinzuzufügen!');
+      setTimeout(() => {
+        this.loadingStrings.push({ string: 'Fehler Bridge.Modbus.Serial hinzuzufügen', type: 'danger' });
+      }, 2000);
     });
-    setTimeout(() => {
-      this.loadingStrings.push('Versuche Bridge.Modbus.Serial hinzuzufügen..')
-      this.edge.createComponentConfig(this.websocket, 'Bridge.Modbus.Serial', this.gatherCommunication(this.config)).then(response => {
-        this.loadingStrings.push('Bridge.Modbus.Serial erfolgreich hinzugefügt')
-      }).catch(reason => {
-        if (reason.error.code == 1) {
-          this.loadingStrings.push('Bridge.Modbus.Serial existiert bereits!');
-          return;
-        }
-        this.loadingStrings.push('Fehler Bridge.Modbus.Serial hinzuzufügen!');
-      });
-    }, 1000);
 
-    setTimeout(() => {
-      this.loadingStrings.push('Versuche Controller.IO.HeatingElement hinzuzufügen..')
-      this.edge.createComponentConfig(this.websocket, 'Controller.IO.HeatingElement', this.gatherApp(this.config)).then(response => {
-        this.loadingStrings.push('Controller.IO.HeatingElement erfolgreich hinzugefügt')
-      }).catch(reason => {
-        if (reason.error.code == 1) {
-          this.loadingStrings.push('Controller.IO.HeatingElement existiert bereits!');
-          return;
-        }
-        this.loadingStrings.push('Fehler Controller.IO.HeatingElement hinzuzufügen!');
-      });
-    }, 2000);
+    this.edge.createComponentConfig(this.websocket, 'IO.KMtronic', this.gatherType(this.config)).then(() => {
+      setTimeout(() => {
+        this.loadingStrings.push({ string: 'IO.KMtronic wird hinzugefügt', type: 'success' });
+      }, 2000);
+    }).catch(reason => {
+      if (reason.error.code == 1) {
+        setTimeout(() => {
+          this.loadingStrings.push({ string: 'IO.KMtronic existiert bereits', type: 'danger' });
+        }, 2000);
+        return;
+      }
+      setTimeout(() => {
+        this.loadingStrings.push({ string: 'Fehler IO.KMtronic hinzuzufügen', type: 'danger' });
+      }, 2000);
+    });
 
-
-    setTimeout(() => {
-      this.loadingStrings.push('Überprüfe ob Komponenten korrekt hinzugefügt wurden..');
-    }, 4000);
-
-
-
+    this.edge.createComponentConfig(this.websocket, 'Controller.IO.HeatingElement', this.gatherApp(this.config)).then(() => {
+      setTimeout(() => {
+        this.loadingStrings.push({ string: 'Controller.IO.HeatingElement wird hinzugefügt', type: 'success' });
+      }, 2000);
+    }).catch(reason => {
+      if (reason.error.code == 1) {
+        setTimeout(() => {
+          this.loadingStrings.push({ string: 'Controller.IO.HeatingElement existiert bereits', type: 'danger' });
+        }, 2000);
+        return;
+      }
+      setTimeout(() => {
+        this.loadingStrings.push({ string: 'Fehler Controller.IO.HeatingElement hinzuzufügen', type: 'danger' });
+      }, 2000);
+    });
 
     setTimeout(() => {
       this.checkConfiguration();
-    }, 8000);
+    }, 6000);
   }
 
-  public gatherAddedComponents(): EdgeConfig.Component[] {
+  private gatherAddedComponents(): EdgeConfig.Component[] {
     let result = [];
+    this.config.getComponentsByFactory('Bridge.Modbus.Serial').forEach(component => {
+      if (component.id == 'modbus10') {
+        result.push(component)
+      }
+    })
+    this.config.getComponentsByFactory('IO.KMtronic').forEach(component => {
+      if (component.properties['modbus.id'] == 'modbus10') {
+        result.push(component)
+      }
+    })
+    this.config.getComponentsByFactory('Controller.IO.HeatingElement').forEach(component => {
+      result.push(component)
+    })
+    return result
+  }
+
+  private gatherAddedComponentsIntoArray() {
     this.config.getComponentsByFactory('Bridge.Modbus.Serial').forEach(component => {
       if (component.id == 'modbus10') {
         this.components.push(component)
@@ -234,29 +266,48 @@ export class ConfigStateComponent {
       }
     })
     this.config.getComponentsByFactory('Controller.IO.HeatingElement').forEach(component => {
+      this.heatingElementId = component.id;
       this.components.push(component)
     })
-    return result
+    this.edge.currentData.pipe(takeUntil(this.stopOnDestroy)).subscribe(currentData => {
+      let workState = 0;
+      this.components.forEach(component => {
+        let state = currentData.channel[component.id + '/State'];
+        if (!isUndefined(state)) {
+          if (state == 0) {
+            workState += 1;
+          }
+        }
+      })
+      if (workState == 3) {
+        this.appWorking.next(true);
+      } else {
+        this.appWorking.next(false);
+      }
+    })
+    this.subscribeOnAddedComponents();
   }
 
   private checkConfiguration() {
-    this.service.getConfig().then(config => {
-      this.config = config;
-    })
+    this.loadingStrings = [];
+    this.loadingStrings.push({ string: 'Überprüfe ob Komponenten korrekt hinzugefügt wurden..', type: 'setup' });
     setTimeout(() => {
-      console.log("length!", this.gatherAddedComponents().length)
-      if (this.gatherAddedComponents().length == 3) {
-        this.loadingStrings.push('Komponenten korrekt hinzugefügt');
-        this.subscribeOnAddedComponents();
-        return
-      }
-      this.subscribeOnAddedComponents();
-      this.loadingStrings.push('Es konnten nicht alle Komponenten korrekt hinzugefügt werden');
-    }, 5000);
+      this.service.getConfig().then(config => {
+        this.config = config;
+      }).then(() => {
+        if (this.gatherAddedComponents().length == 3) {
+          this.loadingStrings.push({ string: 'Komponenten korrekt hinzugefügt', type: 'success' });
+          this.gatherAddedComponentsIntoArray();
+          return
+        }
+        this.loadingStrings.push({ string: 'Es konnten nicht alle Komponenten korrekt hinzugefügt werden', type: 'danger' });
+        this.loadingStrings.push({ string: 'Bitte Neu starten oder manuell korrigieren', type: 'danger' });
+      })
+    }, 10000);
   }
 
   private subscribeOnAddedComponents() {
-    this.loadingStrings.push('Überprüfe Status der Komponenten..');
+    this.loadingStrings.push({ string: 'Überprüfe Status der Komponenten..', type: 'setup' });
     this.components.forEach(component => {
       Object.keys(component.channels).forEach(channel => {
         this.subscribedChannels.push(

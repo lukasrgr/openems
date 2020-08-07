@@ -20,7 +20,6 @@ import { FixDigitalOutputComponent } from './fixdigitaloutput/fixdigitaloutput.c
 import { FixDigitalOutputModalComponent } from './fixdigitaloutput/modal/modal.component';
 import { GridComponent } from './grid/grid.component';
 import { GridModalComponent } from './grid/modal/modal.component';
-import { HeatingElementComponent } from './heatingelement/heatingelement.component';
 import { HeatingElementModalComponent } from './heatingelement/modal/modal.component';
 import { InfoComponent } from './info/info.component';
 import { LiveComponent } from './live.component';
@@ -85,8 +84,7 @@ import { SymmetricPeakshavingModalComponent } from './peakshaving/symmetric/moda
     FixDigitalOutputModalComponent,
     GridComponent,
     GridModalComponent,
-    HeatingElementComponent,
-    HeatingElementModalComponent,
+    // HeatingElementComponent is being exported via shared.module
     InfoComponent,
     LiveComponent,
     ModalComponentEvcsCluster,

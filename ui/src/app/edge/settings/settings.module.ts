@@ -12,7 +12,6 @@ import { ServiceComponent } from './service/service.component';
 import { SettingsComponent } from './settings.component';
 import { SharedModule } from './../../shared/shared.module';
 import { SystemExecuteComponent } from './systemexecute/systemexecute.component';
-import { ServicePopoverComponent } from './service/popover/popover.page';
 
 @NgModule({
   imports: [
@@ -29,13 +28,11 @@ import { ServicePopoverComponent } from './service/popover/popover.page';
     NetworkComponent,
     ProfileComponent,
     ServiceComponent,
-    ServicePopoverComponent,
     SettingsComponent,
     SystemExecuteComponent,
   ],
   entryComponents: [
     ConfigStateComponent,
-    ServicePopoverComponent,
   ]
 })
 export class SettingsModule { }

@@ -10,20 +10,19 @@
 </ion-header>
 
 <ion-content>
-  <!-- <ion-card-content>
-    <ion-grid *ngIf="checkConfig == true">
-      <ion-row class="ion-justify-content-center">
-        <ion-card-title>Überprüfe aktuelle Konfiguration..</ion-card-title>
-      </ion-row>
-      <ion-progress-bar type="indeterminate"></ion-progress-bar>
-    </ion-grid>
-  </ion-card-content> -->
-
   <ion-card-content *ngIf="loading == true">
     <ion-grid>
       <ion-progress-bar type="indeterminate"></ion-progress-bar>
       <ion-row *ngFor="let string of loadingStrings" class="ion-justify-content-center">
-        <ion-label class="ion-text-center">{{ string }}</ion-label>
+        <ion-item lines="none" class="ion-no-padding">
+          <ion-label class="ion-text-center">{{ string.string }}
+          </ion-label>
+          <ng-container [ngSwitch]="string.type">
+            <ion-icon *ngSwitchCase="'success'" color="success" name="checkmark-circle-outline"></ion-icon>
+            <ion-icon *ngSwitchCase="'setup'" color="success" name="information-outline"></ion-icon>
+            <ion-icon *ngSwitchCase="'danger'" color="danger" name="alert-outline"></ion-icon>
+          </ng-container>
+        </ion-item>
       </ion-row>
     </ion-grid>
   </ion-card-content>
@@ -44,12 +43,11 @@
         </ion-label>
         <ion-button (click)="addHeatingElementComponents()">Ok</ion-button>
         <ion-button (click)="modalCtrl.dismiss()">Abbrechen</ion-button>
-        <ion-button (click)="gatherAddedComponents()">gather</ion-button>
       </ion-row>
     </ion-grid>
   </ion-card-content>
 
-  <ion-card-content *ngIf="running == true">
+  <ion-card-content *ngIf="running == true && loading == false">
     <ion-list>
       <ng-container *ngIf="edge.currentData | async as currentData">
         <ng-container *ngFor="let component of components" [ngSwitch]="component.factoryId">
@@ -102,5 +100,13 @@
         </ng-container>
       </ng-container>
     </ion-list>
+    <ng-container *ngIf="appWorking.getValue() == true">
+      <ion-card-content>
+        <ion-text class="ion-text-center ion-padding-top">
+          <h2>App funktioniert!</h2>
+        </ion-text>
+        <heatingelement [componentId]="heatingElementId"></heatingelement>
+      </ion-card-content>
+    </ng-container>
   </ion-card-content>
 </ion-content>

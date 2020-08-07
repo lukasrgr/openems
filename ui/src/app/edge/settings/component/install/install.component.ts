@@ -35,7 +35,6 @@ export class ComponentInstallComponent implements OnInit {
       this.edge = edge;
     });
     let factoryId = this.route.snapshot.params["factoryId"];
-    console.log("factoryID", factoryId)
     this.service.getConfig().then(config => {
       this.factoryId = factoryId;
       this.factory = config.factories[factoryId];
@@ -81,13 +80,11 @@ export class ComponentInstallComponent implements OnInit {
       this.form = new FormGroup({});
       this.fields = fields;
       this.model = model;
-      console.log("form: ", this.form, " fields:", this.fields, " model:", this.model)
     });
   }
 
   public submit() {
     let properties: { name: string, value: any }[] = [];
-    console.log("thisformscontrols", this.form.controls)
     for (let controlKey in this.form.controls) {
       let control = this.form.controls[controlKey];
       let property_id = controlKey.replace('_', '.');

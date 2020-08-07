@@ -2,9 +2,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Component } from '@angular/core';
 import { ConfigStateComponent } from './configstate/configstate.component';
 import { Edge, EdgeConfig, Service, Utils, Websocket } from '../../../shared/shared';
-import { FormlyFieldConfig } from '@ngx-formly/core';
 import { ModalController, PopoverController } from '@ionic/angular';
-import { ServicePopoverComponent } from './popover/popover.page';
 import { TranslateService } from '@ngx-translate/core';
 
 @Component({
