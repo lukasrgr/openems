@@ -5,6 +5,8 @@ import { ModalController, PopoverController } from '@ionic/angular';
 import { TranslateService } from '@ngx-translate/core';
 import { HeatingElementRTUComponent } from './heatingelementrtu/heatingelementrtu.component';
 import { HeatingElementTCPComponent } from './heatingelementtcp/heatingelementtcp.component';
+import { EVCSComponent } from './evcs/evcs.component';
+import { HeatingpumpTCPComponent } from './heatingpumptcp/heatingpumptcp.component';
 
 @Component({
   selector: ServiceComponent.SELECTOR,
@@ -14,8 +16,6 @@ export class ServiceComponent {
 
   private static readonly SELECTOR = "service";
 
-  public loading: boolean = false;
-
   public edge: Edge = null;
   public config: EdgeConfig = null;
 
@@ -24,7 +24,6 @@ export class ServiceComponent {
   constructor(
     private route: ActivatedRoute,
     private service: Service,
-    private websocket: Websocket,
     public modalCtrl: ModalController,
     private translate: TranslateService,
   ) { }
@@ -45,9 +44,6 @@ export class ServiceComponent {
         edge: this.edge,
       }
     });
-    modal.onDidDismiss().then(() => {
-      this.loading = false;
-    })
     return await modal.present();
   }
 
@@ -58,9 +54,26 @@ export class ServiceComponent {
         edge: this.edge,
       }
     });
-    modal.onDidDismiss().then(() => {
-      this.loading = false;
-    })
+    return await modal.present();
+  }
+
+  public async presentModalEVCS() {
+    const modal = await this.modalCtrl.create({
+      component: EVCSComponent,
+      componentProps: {
+        edge: this.edge,
+      }
+    });
+    return await modal.present();
+  }
+
+  public async presentModalHeatingpump() {
+    const modal = await this.modalCtrl.create({
+      component: HeatingpumpTCPComponent,
+      componentProps: {
+        edge: this.edge,
+      }
+    });
     return await modal.present();
   }
 }

@@ -36,10 +36,10 @@ export class NetworkComponent {
   ngOnInit() {
     this.service.setCurrentComponent("Netzwerk Konfiguration" /* TODO translate */, this.route).then(edge => {
       this.edge = edge;
-
       edge.sendRequest(this.websocket,
         new ComponentJsonApiRequest({ componentId: "_host", payload: new GetNetworkConfigRequest() })).then(response => {
           let result = (response as GetNetworkConfigResponse).result;
+          console.log("result", result)
           for (let name of Object.keys(result.interfaces)) {
             let iface = result.interfaces[name];
             this.interfaces.push(this.generateInterface(name, iface));
@@ -61,6 +61,8 @@ export class NetworkComponent {
       interfaces: {}
     };
     request.interfaces[iface.name] = iface.model;
+
+    console.log("request:", request)
 
     this.edge.sendRequest(this.websocket,
       new ComponentJsonApiRequest({

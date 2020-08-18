@@ -6,15 +6,15 @@ import { takeUntil } from 'rxjs/operators';
 import { isUndefined } from 'util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { ComponentJsonApiRequest } from 'src/app/shared/jsonrpc/request/componentJsonApiRequest';
-import { SetNetworkConfigRequest } from '../../network/setNetworkConfigRequest';
 import { GetNetworkConfigResponse } from '../../network/getNetworkConfigResponse';
 import { GetNetworkConfigRequest } from '../../network/getNetworkConfigRequest';
+import { SetNetworkConfigRequest } from '../../network/setNetworkConfigRequest';
 
 @Component({
-  selector: HeatingElementTCPComponent.SELECTOR,
-  templateUrl: './heatingelementtcp.component.html'
+  selector: EVCSComponent.SELECTOR,
+  templateUrl: './evcs.component.html'
 })
-export class HeatingElementTCPComponent {
+export class EVCSComponent {
 
   public checkingState: boolean = false;
   public loading = true;
@@ -27,12 +27,12 @@ export class HeatingElementTCPComponent {
   public subscribedChannels: ChannelAddress[] = [];
   public components: EdgeConfig.Component[] = [];
 
-  public heatingElementId = null;
+  public evcsId = null;
   public edge: Edge = null;
   public config: EdgeConfig = null;
   private stopOnDestroy: Subject<void> = new Subject<void>();
 
-  private static readonly SELECTOR = "heatingElementTCP";
+  private static readonly SELECTOR = "evcsSetup";
 
 
   constructor(
@@ -54,18 +54,11 @@ export class HeatingElementTCPComponent {
         case 1: {
           this.loadingStrings.push({ string: 'Es konnten nicht alle Komponenten gefunden werden', type: 'danger' });
           setTimeout(() => {
-            this.addHeatingElementComponents();
+            this.addEVCSComponents();
           }, 2000);
           break;
         }
         case 2: {
-          this.loadingStrings.push({ string: 'Es konnten nicht alle Komponenten gefunden werden', type: 'danger' });
-          setTimeout(() => {
-            this.addHeatingElementComponents();
-          }, 2000);
-          break;
-        }
-        case 3: {
           this.gatherAddedComponentsIntoArray();
           this.checkingState = true;
           break;
@@ -93,8 +86,8 @@ export class HeatingElementTCPComponent {
     return result;
   }
 
-  private gatherType(config: EdgeConfig): { name: string, value: any }[] {
-    let factoryId = 'IO.KMtronic'
+  private gatherChargingStation(config: EdgeConfig): { name: string, value: any }[] {
+    let factoryId = 'Evcs.Keba.KeContact'
     let factory = config.factories[factoryId];
     let fields: FormlyFieldConfig[] = [];
     let model = {};
@@ -113,9 +106,8 @@ export class HeatingElementTCPComponent {
       fields.push(field);
       if (property.defaultValue != null) {
         model[property_id] = property.defaultValue;
-        // set costum modbus-id
-        if (property.name == 'Modbus-ID') {
-          model[property_id] = 'modbus10';
+        if (property.name == 'IP-Address') {
+          model[property_id] = '192.168.1.44';
         }
       }
     }
@@ -123,8 +115,8 @@ export class HeatingElementTCPComponent {
     return properties;
   }
 
-  private gatherApp(config: EdgeConfig): { name: string, value: any }[] {
-    let factoryId = 'Controller.IO.HeatingElement';
+  private gatherController(config: EdgeConfig): { name: string, value: any }[] {
+    let factoryId = 'Controller.Evcs';
     let factory = config.factories[factoryId];
     let fields: FormlyFieldConfig[] = [];
     let model = {};
@@ -143,129 +135,73 @@ export class HeatingElementTCPComponent {
       fields.push(field);
       if (property.defaultValue != null) {
         model[property_id] = property.defaultValue;
-        if (property.name == 'Mode') {
-          model[property_id] = 'MANUAL_OFF';
-        }
       }
     }
     let properties = this.createProperties(fields, model);
     return properties;
   }
 
-  private gatherCommunication(config: EdgeConfig): { name: string, value: any }[] {
-    let factoryId = 'Bridge.Modbus.Tcp';
-    let factory = config.factories[factoryId];
-    let fields: FormlyFieldConfig[] = [];
-    let model = {};
-    for (let property of factory.properties) {
-      let property_id = property.id.replace('.', '_');
-      let field: FormlyFieldConfig = {
-        key: property_id,
-        type: 'input',
-        templateOptions: {
-          label: property.name,
-          description: property.description
-        }
-      }
-      // add Property Schema 
-      Utils.deepCopy(property.schema, field);
-      fields.push(field);
-      if (property.name == 'IP-Address') {
-        model[property_id] = '192.168.1.199';
-      }
-      if (property.defaultValue != null) {
-        model[property_id] = property.defaultValue;
-        // set costum component id
-        if (property.name == 'Component-ID') {
-          model[property_id] = 'modbus10';
-        }
-      }
-    }
-    let properties = this.createProperties(fields, model);
-    return properties;
-  }
-
-  public addHeatingElementComponents() {
+  public addEVCSComponents() {
 
     let addedComponents: number = 0;
 
     this.loading = true;
     this.showInit = false;
 
-    this.loadingStrings.push({ string: 'Versuche Bridge.Modbus.Tcp hinzuzufügen..', type: 'setup' });
-    this.loadingStrings.push({ string: 'Versuche IO.KMtronic hinzuzufügen..', type: 'setup' });
-    this.loadingStrings.push({ string: 'Versuche Controller.IO.HeatingElement hinzuzufügen..', type: 'setup' });
-    this.edge.createComponentConfig(this.websocket, 'Bridge.Modbus.Tcp', this.gatherCommunication(this.config)).then(() => {
+    this.loadingStrings.push({ string: 'Versuche Evcs.Keba.KeContact hinzuzufügen..', type: 'setup' });
+    this.loadingStrings.push({ string: 'Versuche Controller.Evcs hinzuzufügen..', type: 'setup' });
+    this.edge.createComponentConfig(this.websocket, 'Evcs.Keba.KeContact', this.gatherChargingStation(this.config)).then(() => {
       setTimeout(() => {
-        this.loadingStrings.push({ string: 'Bridge.Modbus.Tcp wird hinzugefügt', type: 'success' });
+        this.loadingStrings.push({ string: 'Evcs.Keba.KeContact wird hinzugefügt', type: 'success' });
         addedComponents += 1;
-      }, 9000);
+      }, 2000);
     }).catch(reason => {
       if (reason.error.code == 1) {
         setTimeout(() => {
-          this.loadingStrings.push({ string: 'Bridge.Modbus.Tcp existiert bereits', type: 'danger' });
+          this.loadingStrings.push({ string: 'Evcs.Keba.KeContact existiert bereits', type: 'danger' });
           addedComponents += 1;
-        }, 9000);
+        }, 2000);
         return;
       }
       setTimeout(() => {
-        this.loadingStrings.push({ string: 'Fehler Bridge.Modbus.Tcp hinzuzufügen', type: 'danger' });
+        this.loadingStrings.push({ string: 'Fehler Evcs.Keba.KeContact hinzuzufügen', type: 'danger' });
         addedComponents += 1;
-      }, 9000);
+      }, 2000);
     });
 
-    this.edge.createComponentConfig(this.websocket, 'IO.KMtronic', this.gatherType(this.config)).then(() => {
+    this.edge.createComponentConfig(this.websocket, 'Controller.Evcs', this.gatherController(this.config)).then(() => {
       setTimeout(() => {
-        this.loadingStrings.push({ string: 'IO.KMtronic wird hinzugefügt', type: 'success' });
+        this.loadingStrings.push({ string: 'Controller.Evcs wird hinzugefügt', type: 'success' });
         addedComponents += 1;
-      }, 9000);
+      }, 2000);
     }).catch(reason => {
       if (reason.error.code == 1) {
         setTimeout(() => {
-          this.loadingStrings.push({ string: 'IO.KMtronic existiert bereits', type: 'danger' });
+          this.loadingStrings.push({ string: 'Controller.Evcs existiert bereits', type: 'danger' });
           addedComponents += 1;
-        }, 9000);
+        }, 2000);
         return;
       }
       setTimeout(() => {
-        this.loadingStrings.push({ string: 'Fehler IO.KMtronic hinzuzufügen', type: 'danger' });
+        this.loadingStrings.push({ string: 'Fehler Controller.Evcs hinzuzufügen', type: 'danger' });
         addedComponents += 1;
-      }, 9000);
+      }, 2000);
     });
 
-    this.edge.createComponentConfig(this.websocket, 'Controller.IO.HeatingElement', this.gatherApp(this.config)).then(() => {
-      setTimeout(() => {
-        this.loadingStrings.push({ string: 'Controller.IO.HeatingElement wird hinzugefügt', type: 'success' });
-        addedComponents += 1;
-      }, 9000);
-    }).catch(reason => {
-      if (reason.error.code == 1) {
-        setTimeout(() => {
-          this.loadingStrings.push({ string: 'Controller.IO.HeatingElement existiert bereits', type: 'danger' });
-          addedComponents += 1;
-        }, 9000);
-        return;
-      }
-      setTimeout(() => {
-        this.loadingStrings.push({ string: 'Fehler Controller.IO.HeatingElement hinzuzufügen', type: 'danger' });
-        addedComponents += 1;
-      }, 9000);
-    });
 
-    var regularComponentsInterval = setInterval(() => {
-      while (addedComponents == 3) {
+    var percentageInterval = setInterval(() => {
+      while (addedComponents == 2) {
         this.progressPercentage = 0.4;
-        clearInterval(regularComponentsInterval);
+        clearInterval(percentageInterval);
         break;
       }
     }, 300)
 
+
     setTimeout(() => {
       this.loadingStrings = [];
       this.loadingStrings.push({ string: 'Versuche statische IP-Adresse anzulegen..', type: 'setup' });
-    }, 16000);
-
-
+    }, 6000);
 
 
     setTimeout(() => {
@@ -273,14 +209,14 @@ export class HeatingElementTCPComponent {
         new ComponentJsonApiRequest({ componentId: "_host", payload: new GetNetworkConfigRequest() })).then(response => {
           let result = (response as GetNetworkConfigResponse).result;
 
-          if (result.interfaces['eth0'].addresses.includes('192.168.1.100/24')) {
+          if (result.interfaces['eth0'].addresses.includes('192.168.1.10/24')) {
             this.loadingStrings.push({ string: 'Statische IP-Adresse existiert bereits', type: 'success' });
             addedComponents += 1;
           } else {
             let request = {
               interfaces: {
                 eth0: {
-                  addresses: ["192.168.1.100/24"],
+                  addresses: ["192.168.1.10/24"],
                   dhcp: true,
                   dns: null,
                   gateway: null,
@@ -301,10 +237,10 @@ export class HeatingElementTCPComponent {
           }
         })
 
-    }, 22000);
+    }, 10000);
 
     var ipAddressInterval = setInterval(() => {
-      while (addedComponents == 4) {
+      while (addedComponents == 3) {
         this.progressPercentage = 0.6;
         clearInterval(ipAddressInterval);
         break;
@@ -313,40 +249,26 @@ export class HeatingElementTCPComponent {
 
     setTimeout(() => {
       this.checkConfiguration();
-    }, 27000);
+    }, 14000);
   }
 
   public gatherAddedComponents(): EdgeConfig.Component[] {
     let result = [];
-    this.config.getComponentsByFactory('Bridge.Modbus.Tcp').forEach(component => {
-      if (component.id == 'modbus10') {
-        result.push(component)
-      }
+    this.config.getComponentsByFactory('Evcs.Keba.KeContact').forEach(component => {
+      result.push(component)
     })
-    this.config.getComponentsByFactory('IO.KMtronic').forEach(component => {
-      if (component.properties['modbus.id'] == 'modbus10') {
-        result.push(component)
-      }
-    })
-    this.config.getComponentsByFactory('Controller.IO.HeatingElement').forEach(component => {
+    this.config.getComponentsByFactory('Controller.Evcs').forEach(component => {
       result.push(component)
     })
     return result
   }
 
   private gatherAddedComponentsIntoArray() {
-    this.config.getComponentsByFactory('Bridge.Modbus.Tcp').forEach(component => {
-      if (component.id == 'modbus10') {
-        this.components.push(component)
-      }
+    this.config.getComponentsByFactory('Controller.Evcs').forEach(component => {
+      this.components.push(component)
     })
-    this.config.getComponentsByFactory('IO.KMtronic').forEach(component => {
-      if (component.properties['modbus.id'] == 'modbus10') {
-        this.components.push(component)
-      }
-    })
-    this.config.getComponentsByFactory('Controller.IO.HeatingElement').forEach(component => {
-      this.heatingElementId = component.id;
+    this.config.getComponentsByFactory('Evcs.Keba.KeContact').forEach(component => {
+      this.evcsId = component.id;
       this.components.push(component)
     })
     this.edge.currentData.pipe(takeUntil(this.stopOnDestroy)).subscribe(currentData => {
@@ -359,7 +281,7 @@ export class HeatingElementTCPComponent {
           }
         }
       })
-      if (workState == 3) {
+      if (workState == 2) {
         this.appWorking.next(true);
       } else {
         this.appWorking.next(false);
@@ -371,12 +293,12 @@ export class HeatingElementTCPComponent {
   private checkConfiguration() {
     this.loadingStrings = [];
     this.loadingStrings.push({ string: 'Überprüfe ob Komponenten korrekt hinzugefügt wurden..', type: 'setup' });
-    this.progressPercentage = 0.7;
+    this.progressPercentage = 0.6;
     setTimeout(() => {
       this.service.getConfig().then(config => {
         this.config = config;
       }).then(() => {
-        if (this.gatherAddedComponents().length == 3) {
+        if (this.gatherAddedComponents().length == 2) {
           this.loadingStrings.push({ string: 'Komponenten korrekt hinzugefügt', type: 'success' });
           this.progressPercentage = 0.95;
           this.gatherAddedComponentsIntoArray();
@@ -385,7 +307,7 @@ export class HeatingElementTCPComponent {
         this.loadingStrings.push({ string: 'Es konnten nicht alle Komponenten korrekt hinzugefügt werden', type: 'danger' });
         this.loadingStrings.push({ string: 'Bitte Neu starten oder manuell korrigieren', type: 'danger' });
       })
-    }, 14000);
+    }, 10000);
   }
 
   private subscribeOnAddedComponents() {
@@ -399,15 +321,15 @@ export class HeatingElementTCPComponent {
         }
       });
     })
-    this.edge.subscribeChannels(this.websocket, 'heatingElementTCP', this.subscribedChannels);
+    this.edge.subscribeChannels(this.websocket, 'evcsSetup', this.subscribedChannels);
     setTimeout(() => {
       this.loading = false;
       this.running = true;
-    }, 12000);
+    }, 5000);
   }
 
   ionViewDidLeave() {
-    this.edge.unsubscribeChannels(this.websocket, 'heatingElementTCP');
+    this.edge.unsubscribeChannels(this.websocket, 'evcsSetup');
     this.stopOnDestroy.next();
     this.stopOnDestroy.complete();
   }

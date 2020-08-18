@@ -76,8 +76,6 @@ import { SymmetricPeakshavingModalComponent } from './peakshaving/symmetric/moda
     ConsumptionModalComponent,
     EvcsChart,
     EvcsClusterComponent,
-    EvcsComponent,
-    EvcsModalComponent,
     EvcsPopoverComponent,
     FixDigitalOutputComponent,
     FixDigitalOutputModalComponent,

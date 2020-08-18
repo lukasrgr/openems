@@ -27,6 +27,8 @@ import { Utils } from './service/utils';
 import { Websocket } from './service/websocket';
 import { HeatingElementModalComponent } from '../edge/live/heatingelement/modal/modal.component';
 import { HeatingElementComponent } from '../edge/live/heatingelement/heatingelement.component';
+import { EvcsComponent } from '../edge/live/evcs/evcs.component';
+import { EvcsModalComponent } from '../edge/live/evcs/modal/modal.page';
 
 @NgModule({
   imports: [
@@ -53,10 +55,12 @@ import { HeatingElementComponent } from '../edge/live/heatingelement/heatingelem
     UnitvaluePipe,
     // components
     ChartOptionsComponent,
-    PercentageBarComponent,
-    PickDateComponent,
+    EvcsComponent,
+    EvcsModalComponent,
     HeatingElementComponent,
     HeatingElementModalComponent,
+    PercentageBarComponent,
+    PickDateComponent,
   ],
   exports: [
     // pipes
@@ -81,10 +85,12 @@ import { HeatingElementComponent } from '../edge/live/heatingelement/heatingelem
     TranslateModule,
     // components
     ChartOptionsComponent,
-    PercentageBarComponent,
-    PickDateComponent,
+    EvcsComponent,
+    EvcsModalComponent,
     HeatingElementComponent,
     HeatingElementModalComponent,
+    PercentageBarComponent,
+    PickDateComponent,
   ],
   providers: [
     appRoutingProviders,
