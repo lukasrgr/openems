@@ -1,17 +1,35 @@
 <ion-grid>
   <ion-row>
-    <ion-col size="12" size-sm="4">
+    <ion-col size="3" size-sm="4">
       <ion-card>
         <ion-item lines="full" color="light">
           <ion-icon slot="start" size="large" color="danger" name="flame"></ion-icon>
-          <ion-label translate>Edge.Index.Widgets.Heatingelement.heatingelement</ion-label>
+          <ion-label translate>Edge.Index.Widgets.Heatingelement.heatingelement<span> RTU</span></ion-label>
         </ion-item>
         <ion-card-content>
           <ng-container *ngIf="loading">
             <ion-progress-bar type="indeterminate"></ion-progress-bar>
           </ng-container>
           <ng-container *ngIf="!loading">
-            <ion-button class="ion-float-right" (click)="presentModal()">
+            <ion-button class="ion-float-right" (click)="presentModalHeatingRTU()">
+              <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+            </ion-button>
+          </ng-container>
+        </ion-card-content>
+      </ion-card>
+    </ion-col>
+    <ion-col size="3" size-sm="4">
+      <ion-card>
+        <ion-item lines="full" color="light">
+          <ion-icon slot="start" size="large" color="danger" name="flame"></ion-icon>
+          <ion-label translate>Edge.Index.Widgets.Heatingelement.heatingelement<span> TCP</span></ion-label>
+        </ion-item>
+        <ion-card-content>
+          <ng-container *ngIf="loading">
+            <ion-progress-bar type="indeterminate"></ion-progress-bar>
+          </ng-container>
+          <ng-container *ngIf="!loading">
+            <ion-button class="ion-float-right" (click)="presentModalHeatingTCP()">
               <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
             </ion-button>
           </ng-container>

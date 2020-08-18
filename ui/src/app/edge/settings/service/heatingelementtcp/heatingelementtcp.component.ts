@@ -7,15 +7,17 @@ import { isUndefined } from 'util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 
 @Component({
-  selector: ConfigStateComponent.SELECTOR,
-  templateUrl: './configstate.component.html'
+  selector: HeatingElementTCPComponent.SELECTOR,
+  templateUrl: './heatingelementtcp.component.html'
 })
-export class ConfigStateComponent {
+export class HeatingElementTCPComponent {
 
+  public checkingState: boolean = false;
   public loading = true;
   public running = false;
   public showInit: boolean = false;
   public appWorking: BehaviorSubject<boolean> = new BehaviorSubject(false);
+  public progressPercentage: number = 0;
 
   public loadingStrings: { string: string, type: string }[] = [];
   public subscribedChannels: ChannelAddress[] = [];
@@ -26,7 +28,7 @@ export class ConfigStateComponent {
   public config: EdgeConfig = null;
   private stopOnDestroy: Subject<void> = new Subject<void>();
 
-  private static readonly SELECTOR = "configState";
+  private static readonly SELECTOR = "heatingElementTCP";
 
 
   constructor(
@@ -61,6 +63,7 @@ export class ConfigStateComponent {
         }
         case 3: {
           this.gatherAddedComponentsIntoArray();
+          this.checkingState = true;
           break;
         }
       }
@@ -146,7 +149,7 @@ export class ConfigStateComponent {
   }
 
   private gatherCommunication(config: EdgeConfig): { name: string, value: any }[] {
-    let factoryId = 'Bridge.Modbus.Serial';
+    let factoryId = 'Bridge.Modbus.Tcp';
     let factory = config.factories[factoryId];
     let fields: FormlyFieldConfig[] = [];
     let model = {};
@@ -163,6 +166,9 @@ export class ConfigStateComponent {
       // add Property Schema 
       Utils.deepCopy(property.schema, field);
       fields.push(field);
+      if (property.name == 'IP-Address') {
+        model[property_id] = '192.168.1.199';
+      }
       if (property.defaultValue != null) {
         model[property_id] = property.defaultValue;
         // set costum component id
@@ -176,69 +182,88 @@ export class ConfigStateComponent {
   }
 
   public addHeatingElementComponents() {
+
+    let addedComponents: number = 0;
+
     this.loading = true;
     this.showInit = false;
 
-    this.loadingStrings.push({ string: 'Versuche Bridge.Modbus.Serial hinzuzufügen..', type: 'setup' });
+    this.loadingStrings.push({ string: 'Versuche Bridge.Modbus.Tcp hinzuzufügen..', type: 'setup' });
     this.loadingStrings.push({ string: 'Versuche IO.KMtronic hinzuzufügen..', type: 'setup' });
     this.loadingStrings.push({ string: 'Versuche Controller.IO.HeatingElement hinzuzufügen..', type: 'setup' });
-
-    this.edge.createComponentConfig(this.websocket, 'Bridge.Modbus.Serial', this.gatherCommunication(this.config)).then(() => {
+    this.edge.createComponentConfig(this.websocket, 'Bridge.Modbus.Tcp', this.gatherCommunication(this.config)).then(() => {
       setTimeout(() => {
-        this.loadingStrings.push({ string: 'Bridge.Modbus.Serial wird hinzugefügt', type: 'success' });
+        this.loadingStrings.push({ string: 'Bridge.Modbus.Tcp wird hinzugefügt', type: 'success' });
+        addedComponents += 1;
       }, 2000);
     }).catch(reason => {
       if (reason.error.code == 1) {
         setTimeout(() => {
-          this.loadingStrings.push({ string: 'Bridge.Modbus.Serial existiert bereits', type: 'danger' });
+          this.loadingStrings.push({ string: 'Bridge.Modbus.Tcp existiert bereits', type: 'danger' });
+          addedComponents += 1;
         }, 2000);
         return;
       }
       setTimeout(() => {
-        this.loadingStrings.push({ string: 'Fehler Bridge.Modbus.Serial hinzuzufügen', type: 'danger' });
+        this.loadingStrings.push({ string: 'Fehler Bridge.Modbus.Tcp hinzuzufügen', type: 'danger' });
+        addedComponents += 1;
       }, 2000);
     });
 
     this.edge.createComponentConfig(this.websocket, 'IO.KMtronic', this.gatherType(this.config)).then(() => {
       setTimeout(() => {
         this.loadingStrings.push({ string: 'IO.KMtronic wird hinzugefügt', type: 'success' });
+        addedComponents += 1;
       }, 2000);
     }).catch(reason => {
       if (reason.error.code == 1) {
         setTimeout(() => {
           this.loadingStrings.push({ string: 'IO.KMtronic existiert bereits', type: 'danger' });
+          addedComponents += 1;
         }, 2000);
         return;
       }
       setTimeout(() => {
         this.loadingStrings.push({ string: 'Fehler IO.KMtronic hinzuzufügen', type: 'danger' });
+        addedComponents += 1;
       }, 2000);
     });
 
     this.edge.createComponentConfig(this.websocket, 'Controller.IO.HeatingElement', this.gatherApp(this.config)).then(() => {
       setTimeout(() => {
         this.loadingStrings.push({ string: 'Controller.IO.HeatingElement wird hinzugefügt', type: 'success' });
+        addedComponents += 1;
       }, 2000);
     }).catch(reason => {
       if (reason.error.code == 1) {
         setTimeout(() => {
           this.loadingStrings.push({ string: 'Controller.IO.HeatingElement existiert bereits', type: 'danger' });
+          addedComponents += 1;
         }, 2000);
         return;
       }
       setTimeout(() => {
         this.loadingStrings.push({ string: 'Fehler Controller.IO.HeatingElement hinzuzufügen', type: 'danger' });
+        addedComponents += 1;
       }, 2000);
     });
+
+    var percentageInterval = setInterval(() => {
+      while (addedComponents == 3) {
+        this.progressPercentage = 0.4;
+        clearInterval(percentageInterval);
+        break;
+      }
+    }, 300)
 
     setTimeout(() => {
       this.checkConfiguration();
     }, 6000);
   }
 
-  private gatherAddedComponents(): EdgeConfig.Component[] {
+  public gatherAddedComponents(): EdgeConfig.Component[] {
     let result = [];
-    this.config.getComponentsByFactory('Bridge.Modbus.Serial').forEach(component => {
+    this.config.getComponentsByFactory('Bridge.Modbus.Tcp').forEach(component => {
       if (component.id == 'modbus10') {
         result.push(component)
       }
@@ -255,7 +280,7 @@ export class ConfigStateComponent {
   }
 
   private gatherAddedComponentsIntoArray() {
-    this.config.getComponentsByFactory('Bridge.Modbus.Serial').forEach(component => {
+    this.config.getComponentsByFactory('Bridge.Modbus.Tcp').forEach(component => {
       if (component.id == 'modbus10') {
         this.components.push(component)
       }
@@ -291,12 +316,14 @@ export class ConfigStateComponent {
   private checkConfiguration() {
     this.loadingStrings = [];
     this.loadingStrings.push({ string: 'Überprüfe ob Komponenten korrekt hinzugefügt wurden..', type: 'setup' });
+    this.progressPercentage = 0.6;
     setTimeout(() => {
       this.service.getConfig().then(config => {
         this.config = config;
       }).then(() => {
         if (this.gatherAddedComponents().length == 3) {
           this.loadingStrings.push({ string: 'Komponenten korrekt hinzugefügt', type: 'success' });
+          this.progressPercentage = 0.95;
           this.gatherAddedComponentsIntoArray();
           return
         }
@@ -309,16 +336,15 @@ export class ConfigStateComponent {
   private subscribeOnAddedComponents() {
     this.loadingStrings.push({ string: 'Überprüfe Status der Komponenten..', type: 'setup' });
     this.components.forEach(component => {
+      this.subscribedChannels.push(new ChannelAddress(component.id, 'State'));
       Object.keys(component.channels).forEach(channel => {
-        this.subscribedChannels.push(
-          new ChannelAddress(component.id, 'State')
-        )
         if (component.channels[channel]['level']) {
-          this.subscribedChannels.push(new ChannelAddress(component.id, channel))
+          let levelChannel = new ChannelAddress(component.id, channel);
+          this.subscribedChannels.push(levelChannel)
         }
       });
     })
-    this.edge.subscribeChannels(this.websocket, 'configState', this.subscribedChannels);
+    this.edge.subscribeChannels(this.websocket, 'heatingElementTCP', this.subscribedChannels);
     setTimeout(() => {
       this.loading = false;
       this.running = true;
@@ -326,7 +352,7 @@ export class ConfigStateComponent {
   }
 
   ionViewDidLeave() {
-    this.edge.unsubscribeChannels(this.websocket, 'configState');
+    this.edge.unsubscribeChannels(this.websocket, 'heatingElementTCP');
     this.stopOnDestroy.next();
     this.stopOnDestroy.complete();
   }

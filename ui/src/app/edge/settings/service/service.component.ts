@@ -1,9 +1,10 @@
 import { ActivatedRoute } from '@angular/router';
 import { Component } from '@angular/core';
-import { ConfigStateComponent } from './configstate/configstate.component';
 import { Edge, EdgeConfig, Service, Utils, Websocket } from '../../../shared/shared';
 import { ModalController, PopoverController } from '@ionic/angular';
 import { TranslateService } from '@ngx-translate/core';
+import { HeatingElementRTUComponent } from './heatingelementrtu/heatingelementrtu.component';
+import { HeatingElementTCPComponent } from './heatingelementtcp/heatingelementtcp.component';
 
 @Component({
   selector: ServiceComponent.SELECTOR,
@@ -37,9 +38,22 @@ export class ServiceComponent {
     });
   }
 
-  async presentModal() {
+  public async presentModalHeatingRTU() {
     const modal = await this.modalCtrl.create({
-      component: ConfigStateComponent,
+      component: HeatingElementRTUComponent,
+      componentProps: {
+        edge: this.edge,
+      }
+    });
+    modal.onDidDismiss().then(() => {
+      this.loading = false;
+    })
+    return await modal.present();
+  }
+
+  public async presentModalHeatingTCP() {
+    const modal = await this.modalCtrl.create({
+      component: HeatingElementTCPComponent,
       componentProps: {
         edge: this.edge,
       }

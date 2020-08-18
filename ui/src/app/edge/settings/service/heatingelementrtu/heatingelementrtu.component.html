@@ -12,7 +12,13 @@
 <ion-content>
   <ion-card-content *ngIf="loading == true">
     <ion-grid>
-      <ion-progress-bar type="indeterminate"></ion-progress-bar>
+      <ng-container *ngIf="checkingState == false">
+        <ion-row class="ion-justify-content-center">
+          <ion-note>{{ progressPercentage * 100 }}%</ion-note>
+        </ion-row>
+        <ion-progress-bar [value]="progressPercentage"></ion-progress-bar>
+      </ng-container>
+      <ion-progress-bar *ngIf="checkingState == true" type="indeterminate"></ion-progress-bar>
       <ion-row *ngFor="let string of loadingStrings" class="ion-justify-content-center">
         <ion-item lines="none" class="ion-no-padding">
           <ion-label class="ion-text-center">{{ string.string }}
@@ -41,6 +47,8 @@
               href="https://docs.fenecon.de/en/_/latest/_attachments/FEMS_App_Heizstab_6kW_Installations-_und_Benutzerhandbuch.pdf"
               translate>Edge.Config.Service.ibnLink</a></ion-text>
         </ion-label>
+      </ion-row>
+      <ion-row class="ion-justify-content-center">
         <ion-button (click)="addHeatingElementComponents()">Ok</ion-button>
         <ion-button (click)="modalCtrl.dismiss()">Abbrechen</ion-button>
       </ion-row>
