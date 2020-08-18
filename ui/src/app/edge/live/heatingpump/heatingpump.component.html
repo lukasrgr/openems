@@ -1,0 +1,24 @@
+<ion-card button (click)="presentModal()">
+    <ion-item lines="full" color="light">
+        <ion-icon slot="start" color="danger" name="thermometer-outline"></ion-icon>
+        <ion-label>Wärmepumpe</ion-label>
+    </ion-item>
+    <ion-card-content>
+        <table class="full_width">
+            <tr>
+                <td style="width: 65%" translate>
+                    General.mode
+                </td>
+                <td style="width: 35%" class="align_right" translate>
+                    General.manually
+                </td>
+            </tr>
+            <tr>
+                <td style="width:65%" translate>General.state</td>
+                <td style="width:35%" class="align_right">
+                    Einschaltbefehl
+                </td>
+            </tr>
+        </table>
+    </ion-card-content>
+</ion-card>
