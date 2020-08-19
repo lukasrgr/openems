@@ -14,6 +14,7 @@ import { ServiceComponent } from './service/service.component';
 import { SettingsComponent } from './settings.component';
 import { SharedModule } from './../../shared/shared.module';
 import { SystemExecuteComponent } from './systemexecute/systemexecute.component';
+import { HeatingpumpTCPComponent } from './service/heatingpumptcp/heatingpumptcp.component';
 
 @NgModule({
   imports: [
@@ -29,6 +30,7 @@ import { SystemExecuteComponent } from './systemexecute/systemexecute.component'
     EVCSComponent,
     HeatingElementRTUComponent,
     HeatingElementTCPComponent,
+    HeatingpumpTCPComponent,
     NetworkComponent,
     ProfileComponent,
     ServiceComponent,
@@ -39,6 +41,7 @@ import { SystemExecuteComponent } from './systemexecute/systemexecute.component'
     EVCSComponent,
     HeatingElementRTUComponent,
     HeatingElementTCPComponent,
+    HeatingpumpTCPComponent,
   ]
 })
 export class SettingsModule { }

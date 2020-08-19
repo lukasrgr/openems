@@ -5,6 +5,10 @@ import { Subject, BehaviorSubject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { isUndefined } from 'util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
+import { ComponentJsonApiRequest } from 'src/app/shared/jsonrpc/request/componentJsonApiRequest';
+import { GetNetworkConfigRequest } from '../../network/getNetworkConfigRequest';
+import { GetNetworkConfigResponse } from '../../network/getNetworkConfigResponse';
+import { SetNetworkConfigRequest } from '../../network/setNetworkConfigRequest';
 
 @Component({
   selector: HeatingpumpTCPComponent.SELECTOR,
@@ -23,7 +27,6 @@ export class HeatingpumpTCPComponent {
   public subscribedChannels: ChannelAddress[] = [];
   public components: EdgeConfig.Component[] = [];
 
-  public heatingElementId = null;
   public edge: Edge = null;
   public config: EdgeConfig = null;
   private stopOnDestroy: Subject<void> = new Subject<void>();
@@ -41,58 +44,44 @@ export class HeatingpumpTCPComponent {
     this.service.getConfig().then(config => {
       this.config = config;
     })
-    // .then(() => {
-    //   switch (this.gatherAddedComponents().length) {
-    //     case 0: {
-    //       this.showInit = true;
-    //       this.loading = false;
-    //       break;
-    //     }
-    //     case 1: {
-    //       this.loadingStrings.push({ string: 'Es konnten nicht alle Komponenten gefunden werden', type: 'danger' });
-    //       setTimeout(() => {
-    //         this.addHeatingpumpComponents();
-    //       }, 2000);
-    //       break;
-    //     }
-    //     case 2: {
-    //       this.loadingStrings.push({ string: 'Es konnten nicht alle Komponenten gefunden werden', type: 'danger' });
-    //       setTimeout(() => {
-    //         this.addHeatingpumpComponents();
-    //       }, 2000);
-    //       break;
-    //     }
-    //     case 3: {
-    //       this.loadingStrings.push({ string: 'Es konnten nicht alle Komponenten gefunden werden', type: 'danger' });
-    //       setTimeout(() => {
-    //         this.addHeatingpumpComponents();
-    //       }, 2000);
-    //       break;
-    //     }
-    //     case 4: {
-    //       this.addHeatingpumpComponents();
-    //       this.checkingState = true;
-    //       break;
-    //     }
-    //   }
-    // });
+      .then(() => {
+        switch (this.gatherAddedComponents().length) {
+          case 0: {
+            this.showInit = true;
+            this.loading = false;
+            break;
+          }
+          case 1: {
+            this.loadingStrings.push({ string: 'Es konnten nicht alle Komponenten gefunden werden', type: 'danger' });
+            setTimeout(() => {
+              this.addHeatingpumpComponents();
+            }, 2000);
+            break;
+          }
+          case 2: {
+            this.loadingStrings.push({ string: 'Es konnten nicht alle Komponenten gefunden werden', type: 'danger' });
+            setTimeout(() => {
+              this.addHeatingpumpComponents();
+            }, 2000);
+            break;
+          }
+          case 3: {
+            this.loadingStrings.push({ string: 'Es konnten nicht alle Komponenten gefunden werden', type: 'danger' });
+            setTimeout(() => {
+              this.addHeatingpumpComponents();
+            }, 2000);
+            break;
+          }
+          case 4: {
+            this.addHeatingpumpComponents();
+            this.checkingState = true;
+            break;
+          }
+        }
+      });
     this.service.getCurrentEdge().then(edge => {
       this.edge = edge;
     })
-
-    setTimeout(() => {
-      this.gatherFirstApp(this.config);
-      // this.edge.createComponentConfig(this.websocket, 'Controller.ChannelThreshold', this.gatherFirstApp(this.config)).then((erfolg) => {
-      //   console.log("erfolg", erfolg)
-      // }).catch(reason => {
-      //   console.log("reason", reason)
-      // });
-      // this.edge.createComponentConfig(this.websocket, 'Controller.ChannelThreshold', this.gatherSecondApp(this.config)).then((erfolg) => {
-      //   console.log("erfolg", erfolg)
-      // }).catch(reason => {
-      //   console.log("reason", reason)
-      // });
-    }, 5000)
   }
 
   // used to assemble properties out of created fields and model from 'gather' methods
@@ -264,87 +253,159 @@ export class HeatingpumpTCPComponent {
 
   public addHeatingpumpComponents() {
 
-    // let addedComponents: number = 0;
+    let addedComponents: number = 0;
 
-    // this.loading = true;
-    // this.showInit = false;
+    this.loading = true;
+    this.showInit = false;
 
-    // this.loadingStrings.push({ string: 'Versuche Bridge.Modbus.Serial hinzuzufügen..', type: 'setup' });
-    // this.loadingStrings.push({ string: 'Versuche IO.KMtronic hinzuzufügen..', type: 'setup' });
-    // this.loadingStrings.push({ string: 'Versuche Controller.IO.HeatingElement hinzuzufügen..', type: 'setup' });
-    // this.edge.createComponentConfig(this.websocket, 'Bridge.Modbus.Serial', this.gatherCommunication(this.config)).then(() => {
-    //   setTimeout(() => {
-    //     this.loadingStrings.push({ string: 'Bridge.Modbus.Serial wird hinzugefügt', type: 'success' });
-    //     addedComponents += 1;
-    //   }, 2000);
-    // }).catch(reason => {
-    //   if (reason.error.code == 1) {
-    //     setTimeout(() => {
-    //       this.loadingStrings.push({ string: 'Bridge.Modbus.Serial existiert bereits', type: 'danger' });
-    //       addedComponents += 1;
-    //     }, 2000);
-    //     return;
-    //   }
-    //   setTimeout(() => {
-    //     this.loadingStrings.push({ string: 'Fehler Bridge.Modbus.Serial hinzuzufügen', type: 'danger' });
-    //     addedComponents += 1;
-    //   }, 2000);
-    // });
+    this.loadingStrings.push({ string: 'Versuche Bridge.Modbus.Tcp hinzuzufügen..', type: 'setup' });
+    this.loadingStrings.push({ string: 'Versuche IO.KMtronic hinzuzufügen..', type: 'setup' });
+    this.loadingStrings.push({ string: 'Versuche Controller.ChannelThreshold 1 hinzuzufügen..', type: 'setup' });
+    this.loadingStrings.push({ string: 'Versuche Controller.ChannelThreshold 2 hinzuzufügen..', type: 'setup' });
 
-    // this.edge.createComponentConfig(this.websocket, 'IO.KMtronic', this.gatherType(this.config)).then(() => {
-    //   setTimeout(() => {
-    //     this.loadingStrings.push({ string: 'IO.KMtronic wird hinzugefügt', type: 'success' });
-    //     addedComponents += 1;
-    //   }, 2000);
-    // }).catch(reason => {
-    //   if (reason.error.code == 1) {
-    //     setTimeout(() => {
-    //       this.loadingStrings.push({ string: 'IO.KMtronic existiert bereits', type: 'danger' });
-    //       addedComponents += 1;
-    //     }, 2000);
-    //     return;
-    //   }
-    //   setTimeout(() => {
-    //     this.loadingStrings.push({ string: 'Fehler IO.KMtronic hinzuzufügen', type: 'danger' });
-    //     addedComponents += 1;
-    //   }, 2000);
-    // });
+    this.edge.createComponentConfig(this.websocket, 'Bridge.Modbus.Tcp', this.gatherCommunication(this.config)).then(() => {
+      setTimeout(() => {
+        this.loadingStrings.push({ string: 'Bridge.Modbus.Tcp wird hinzugefügt', type: 'success' });
+        addedComponents += 1;
+      }, 9000);
+    }).catch(reason => {
+      if (reason.error.code == 1) {
+        setTimeout(() => {
+          this.loadingStrings.push({ string: 'Bridge.Modbus.Tcp existiert bereits', type: 'danger' });
+          addedComponents += 1;
+        }, 9000);
+        return;
+      }
+      setTimeout(() => {
+        this.loadingStrings.push({ string: 'Fehler Bridge.Modbus.Tcp hinzuzufügen', type: 'danger' });
+        addedComponents += 1;
+      }, 9000);
+    });
 
-    // this.edge.createComponentConfig(this.websocket, 'Controller.IO.HeatingElement', this.gatherApp(this.config)).then(() => {
-    //   setTimeout(() => {
-    //     this.loadingStrings.push({ string: 'Controller.IO.HeatingElement wird hinzugefügt', type: 'success' });
-    //     addedComponents += 1;
-    //   }, 2000);
-    // }).catch(reason => {
-    //   if (reason.error.code == 1) {
-    //     setTimeout(() => {
-    //       this.loadingStrings.push({ string: 'Controller.IO.HeatingElement existiert bereits', type: 'danger' });
-    //       addedComponents += 1;
-    //     }, 2000);
-    //     return;
-    //   }
-    //   setTimeout(() => {
-    //     this.loadingStrings.push({ string: 'Fehler Controller.IO.HeatingElement hinzuzufügen', type: 'danger' });
-    //     addedComponents += 1;
-    //   }, 2000);
-    // });
+    this.edge.createComponentConfig(this.websocket, 'IO.KMtronic', this.gatherType(this.config)).then(() => {
+      setTimeout(() => {
+        this.loadingStrings.push({ string: 'IO.KMtronic wird hinzugefügt', type: 'success' });
+        addedComponents += 1;
+      }, 9000);
+    }).catch(reason => {
+      if (reason.error.code == 1) {
+        setTimeout(() => {
+          this.loadingStrings.push({ string: 'IO.KMtronic existiert bereits', type: 'danger' });
+          addedComponents += 1;
+        }, 9000);
+        return;
+      }
+      setTimeout(() => {
+        this.loadingStrings.push({ string: 'Fehler IO.KMtronic hinzuzufügen', type: 'danger' });
+        addedComponents += 1;
+      }, 9000);
+    });
 
-    // var percentageInterval = setInterval(() => {
-    //   while (addedComponents == 3) {
-    //     this.progressPercentage = 0.4;
-    //     clearInterval(percentageInterval);
-    //     break;
-    //   }
-    // }, 300)
+    this.edge.createComponentConfig(this.websocket, 'Controller.ChannelThreshold', this.gatherFirstApp(this.config)).then(() => {
+      setTimeout(() => {
+        this.loadingStrings.push({ string: 'Controller.ChannelThreshold 1 wird hinzugefügt', type: 'success' });
+        addedComponents += 1;
+      }, 9000);
+    }).catch(reason => {
+      if (reason.error.code == 1) {
+        setTimeout(() => {
+          this.loadingStrings.push({ string: 'Controller.ChannelThreshold 1 existiert bereits', type: 'danger' });
+          addedComponents += 1;
+        }, 9000);
+        return;
+      }
+      setTimeout(() => {
+        this.loadingStrings.push({ string: 'Fehler Controller.ChannelThreshold 1 hinzuzufügen', type: 'danger' });
+        addedComponents += 1;
+      }, 9000);
+    });
 
-    // setTimeout(() => {
-    //   this.checkConfiguration();
-    // }, 6000);
+    this.edge.createComponentConfig(this.websocket, 'Controller.ChannelThreshold', this.gatherSecondApp(this.config)).then(() => {
+      setTimeout(() => {
+        this.loadingStrings.push({ string: 'Controller.ChannelThreshold 2 wird hinzugefügt', type: 'success' });
+        addedComponents += 1;
+      }, 9000);
+    }).catch(reason => {
+      if (reason.error.code == 1) {
+        setTimeout(() => {
+          this.loadingStrings.push({ string: 'Controller.ChannelThreshold 2 existiert bereits', type: 'danger' });
+          addedComponents += 1;
+        }, 9000);
+        return;
+      }
+      setTimeout(() => {
+        this.loadingStrings.push({ string: 'Fehler Controller.ChannelThreshold 2 hinzuzufügen', type: 'danger' });
+        addedComponents += 1;
+      }, 9000);
+    });
+
+    var regularComponentsInterval = setInterval(() => {
+      while (addedComponents == 4) {
+        this.progressPercentage = 0.4;
+        clearInterval(regularComponentsInterval);
+        break;
+      }
+    }, 300)
+
+    setTimeout(() => {
+      this.loadingStrings = [];
+      this.loadingStrings.push({ string: 'Versuche statische IP-Adresse anzulegen..', type: 'setup' });
+    }, 16000);
+
+
+
+
+    setTimeout(() => {
+      this.edge.sendRequest(this.websocket,
+        new ComponentJsonApiRequest({ componentId: "_host", payload: new GetNetworkConfigRequest() })).then(response => {
+          let result = (response as GetNetworkConfigResponse).result;
+
+          if (result.interfaces['eth0'].addresses.includes('192.168.1.100/24')) {
+            this.loadingStrings.push({ string: 'Statische IP-Adresse existiert bereits', type: 'success' });
+            addedComponents += 1;
+          } else {
+            let request = {
+              interfaces: {
+                eth0: {
+                  addresses: ["192.168.1.100/24"],
+                  dhcp: true,
+                  dns: null,
+                  gateway: null,
+                  linkLocalAddressing: true
+                }
+              }
+            };
+            this.edge.sendRequest(this.websocket,
+              new ComponentJsonApiRequest({
+                componentId: "_host", payload: new SetNetworkConfigRequest(request)
+              })).then(response => {
+                this.loadingStrings.push({ string: 'Statische IP-Adresse wird hinzugefügt', type: 'success' });
+                addedComponents += 1;
+              }).catch(reason => {
+                this.loadingStrings.push({ string: 'Fehler statische IP-Adresse hinzuzufügen', type: 'danger' });
+                addedComponents += 1;
+              })
+          }
+        })
+
+    }, 22000);
+
+    var ipAddressInterval = setInterval(() => {
+      while (addedComponents == 5) {
+        this.progressPercentage = 0.6;
+        clearInterval(ipAddressInterval);
+        break;
+      }
+    }, 300)
+
+    setTimeout(() => {
+      this.checkConfiguration();
+    }, 27000);
   }
 
   public gatherAddedComponents(): EdgeConfig.Component[] {
     let result = [];
-    this.config.getComponentsByFactory('Bridge.Modbus.Serial').forEach(component => {
+    this.config.getComponentsByFactory('Bridge.Modbus.Tcp').forEach(component => {
       if (component.id == 'modbus10') {
         result.push(component)
       }
@@ -354,14 +415,14 @@ export class HeatingpumpTCPComponent {
         result.push(component)
       }
     })
-    this.config.getComponentsByFactory('Controller.IO.HeatingElement').forEach(component => {
+    this.config.getComponentsByFactory('Controller.ChannelThreshold').forEach(component => {
       result.push(component)
     })
     return result
   }
 
   private gatherAddedComponentsIntoArray() {
-    this.config.getComponentsByFactory('Bridge.Modbus.Serial').forEach(component => {
+    this.config.getComponentsByFactory('Bridge.Modbus.Tcp').forEach(component => {
       if (component.id == 'modbus10') {
         this.components.push(component)
       }
@@ -371,8 +432,7 @@ export class HeatingpumpTCPComponent {
         this.components.push(component)
       }
     })
-    this.config.getComponentsByFactory('Controller.IO.HeatingElement').forEach(component => {
-      this.heatingElementId = component.id;
+    this.config.getComponentsByFactory('Controller.ChannelThreshold').forEach(component => {
       this.components.push(component)
     })
     this.edge.currentData.pipe(takeUntil(this.stopOnDestroy)).subscribe(currentData => {
@@ -385,7 +445,7 @@ export class HeatingpumpTCPComponent {
           }
         }
       })
-      if (workState == 3) {
+      if (workState == 4) {
         this.appWorking.next(true);
       } else {
         this.appWorking.next(false);
@@ -402,7 +462,7 @@ export class HeatingpumpTCPComponent {
       this.service.getConfig().then(config => {
         this.config = config;
       }).then(() => {
-        if (this.gatherAddedComponents().length == 3) {
+        if (this.gatherAddedComponents().length == 4) {
           this.loadingStrings.push({ string: 'Komponenten korrekt hinzugefügt', type: 'success' });
           this.progressPercentage = 0.95;
           this.gatherAddedComponentsIntoArray();
