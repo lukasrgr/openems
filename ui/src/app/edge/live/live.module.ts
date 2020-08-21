@@ -22,6 +22,8 @@ import { GridComponent } from './grid/grid.component';
 import { GridModalComponent } from './grid/modal/modal.component';
 import { HeatingElementComponent } from './heatingelement/heatingelement.component';
 import { HeatingElementModalComponent } from './heatingelement/modal/modal.component';
+import { HeatingpumpComponent } from './heatingpump/heatingpump.component';
+import { HeatingpumpModalComponent } from './heatingpump/modal/modal.component';
 import { InfoComponent } from './info/info.component';
 import { LiveComponent } from './live.component';
 import { ModalComponentEvcsCluster } from './evcsCluster/modal/evcsCluster-modal.page';
@@ -38,6 +40,7 @@ import { StorageComponent } from './storage/storage.component';
 import { StorageModalComponent } from './storage/modal/modal.component';
 import { SymmetricPeakshavingComponent } from './peakshaving/symmetric/symmetricpeakshaving.component';
 import { SymmetricPeakshavingModalComponent } from './peakshaving/symmetric/modal/modal.component';
+
 
 @NgModule({
   imports: [
@@ -57,6 +60,7 @@ import { SymmetricPeakshavingModalComponent } from './peakshaving/symmetric/moda
     FixDigitalOutputModalComponent,
     GridModalComponent,
     HeatingElementModalComponent,
+    HeatingpumpModalComponent,
     ModalComponentEvcsCluster,
     ProductionModalComponent,
     SelfconsumptionModalComponent,
@@ -87,6 +91,8 @@ import { SymmetricPeakshavingModalComponent } from './peakshaving/symmetric/moda
     GridModalComponent,
     HeatingElementComponent,
     HeatingElementModalComponent,
+    HeatingpumpComponent,
+    HeatingpumpModalComponent,
     InfoComponent,
     LiveComponent,
     ModalComponentEvcsCluster,
