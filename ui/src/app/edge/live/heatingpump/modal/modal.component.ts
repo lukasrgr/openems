@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { ModalController } from '@ionic/angular';
 import { Service } from '../../../../shared/shared';
 
@@ -14,34 +14,27 @@ export class HeatingpumpModalComponent {
   private static readonly SELECTOR = "heatingpump-modal";
 
   public controllerMode: ControllerMode = 'Manual';
-  public pumpMode: PumpMode = 'Normalbetrieb';
-  public pumpModeValue: Number = null;
+  public pumpMode: PumpMode = 'Einschaltbefehl';
+
+  public einschaltbefehl: boolean = false;
+  public einschaltempfehlung: boolean = false;
+  public normalbetrieb: boolean = true;
+  public sperre: boolean = false;
+
 
 
   constructor(
     public modalCtrl: ModalController,
     public service: Service,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
-    switch (this.pumpMode) {
-      case 1: {
-        //statements; 
-        break;
-      }
-      case 2: {
-        //statements; 
-        break;
-      }
-    }
   }
 
-  updateControllerMode(event: CustomEvent) {
+  public updateControllerMode(event: CustomEvent) {
     let oldMode = this.controllerMode;
     let newMode = event.detail.value;
-
-    console.log("oldMode", oldMode);
-    console.log("newMode", newMode);
 
     if (oldMode != newMode) {
       console.log("anderer mode!", newMode)
@@ -49,16 +42,12 @@ export class HeatingpumpModalComponent {
     }
   }
 
-  updatePumpMode(event: CustomEvent) {
-    let oldMode = this.pumpMode;
-    let newMode = event.detail.value;
-
-    console.log("oldMode", oldMode);
-    console.log("newMode", newMode);
-
-    if (oldMode != newMode) {
-      console.log("anderer mode!", newMode)
-      this.pumpMode = newMode;
+  public updatePumpMode(event, mode: PumpMode) {
+    if (event.detail['checked'] == true) {
+      this.pumpMode = mode;
+      this.cdr.detectChanges();
     }
+    console.log("modeÜbergabe", mode)
+    console.log("pumpMode", this.pumpMode)
   }
 }

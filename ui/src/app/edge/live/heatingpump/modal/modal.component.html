@@ -36,14 +36,39 @@
     </ion-segment>
   </ion-card-content>
   <!-- Manual Mode -->
-  <ion-card-content *ngIf="controllerMode == 'Manual'" class="underline">
-    <table class="full_width">
-      <tr>
-        <ion-range (ionChange)="updatePumpMode($event)" min="1" max="4" step="1" [value]="pumpMode" snaps>
-        </ion-range>
-      </tr>
-    </table>
-  </ion-card-content>
+  <ng-container *ngIf="controllerMode == 'Manual'">
+    <ion-card-content class="underline">
+      <ion-list>
+        <ion-item lines="none">
+          <ion-label>Einschaltbefehel</ion-label>
+          <ion-toggle disabled [checked]="pumpMode == 'Einschaltbefehl'"
+            (ionChange)="updatePumpMode($event,'Einschaltbefehl')">
+          </ion-toggle>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>
+            Einschaltempfehlung
+          </ion-label>
+          <ion-toggle [checked]="pumpMode == 'Einschaltempfehlung'"
+            (ionChange)="updatePumpMode($event,'Einschaltempfehlung')">
+          </ion-toggle>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>
+            Normalbetrieb
+          </ion-label>
+          <ion-toggle [checked]="pumpMode == 'Normalbetrieb'" (ionChange)="updatePumpMode($event,'Normalbetrieb')">
+          </ion-toggle>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>
+            Sperre
+          </ion-label>
+          <ion-toggle [checked]="pumpMode == 'Sperre'" (ionChange)="updatePumpMode($event,'Sperre')"></ion-toggle>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ng-container>
   <!-- Automatic Mode -->
   <ion-card-content *ngIf="controllerMode == 'Auto'" class="underline">
     DAS IST DER AUTOMATISCHE MODE
