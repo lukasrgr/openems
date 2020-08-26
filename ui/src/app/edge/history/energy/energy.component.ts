@@ -15,6 +15,7 @@ import { QueryHistoricTimeseriesDataResponse } from '../../../shared/jsonrpc/res
 import { QueryHistoricTimeseriesExportXlxsRequest } from 'src/app/shared/jsonrpc/request/queryHistoricTimeseriesExportXlxs';
 import { TranslateService } from '@ngx-translate/core';
 import * as FileSaver from 'file-saver';
+import { NgxSpinnerService } from 'ngx-spinner';
 
 @Component({
   selector: 'energy',
@@ -37,6 +38,7 @@ export class EnergyComponent extends AbstractHistoryChart implements OnChanges {
     private route: ActivatedRoute,
     public modalCtrl: ModalController,
     private websocket: Websocket,
+    private spinner: NgxSpinnerService
   ) {
     super(service, translate);
   }
@@ -106,6 +108,7 @@ export class EnergyComponent extends AbstractHistoryChart implements OnChanges {
     // Timeout is used to prevent ExpressionChangedAfterItHasBeenCheckedError
     setTimeout(() => this.getChartHeight(), 500);
     this.subscribeChartRefresh()
+    this.spinner.show()
   }
 
   ngOnDestroy() {

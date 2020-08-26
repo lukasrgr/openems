@@ -35,6 +35,7 @@ export class SystemExecuteComponent implements OnInit {
   public send(username: string, password: string, timeout: number, background: boolean, command: string) {
     this.service.getCurrentEdge().then(edge => {
       this.loading = true;
+      console.log("loading", this.loading)
       this.stdout = [];
       this.stderr = [];
       edge.sendRequest(this.websocket,
@@ -46,6 +47,7 @@ export class SystemExecuteComponent implements OnInit {
         })).then(response => {
           let result = (response as ExecuteSystemCommandResponse).result;
           this.loading = false;
+          console.log("loading RESPONSE", this.loading)
           if (result.stdout.length == 0) {
             this.stdout = [""];
           } else {
@@ -53,6 +55,8 @@ export class SystemExecuteComponent implements OnInit {
           }
           this.stderr = result.stderr;
         }).catch(reason => {
+          // this.loading = false;
+          console.log("loading REASON", this.loading)
           this.stderr = ["Error executing system command:" + reason.error.message];
         })
     });
