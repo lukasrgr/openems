@@ -138,7 +138,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		this.config = config;
 		super.activate(context, config.id(), config.alias(), config.enabled(), DEFAULT_UNIT_ID, this.cm, "Modbus",
 				config.modbus_id());
-		//this.config = config;
+		// this.config = config;
 		this.inverterState = config.InverterState();
 
 		// initialize the connection to the battery
@@ -194,7 +194,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		this.channel(SinexcelChannelId.STATE_MACHINE).setNextValue(this.stateMachine.getCurrentState());
 
 		// Prepare Context
-		Context context = new Context(this, this.battery, this.config);
+		Context context = new Context(this, this.componentManager, this.battery, this.config);
 
 		// Call the StateMachine
 		try {
@@ -206,74 +206,6 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		}
 
 	}
-
-	public State stateTransitionHelper() throws IllegalArgumentException, OpenemsNamedException {
-
-		// Digital input channel one , false is on-grid and true is off-grid
-		BooleanReadChannel in1 = this.componentManager
-				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
-
-		// Digital input channel two , true when the bender is waiting
-		BooleanReadChannel in2 = this.componentManager
-				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
-
-		// Digital input channel two , true when the bender is waiting
-		BooleanReadChannel in3 = this.componentManager
-				.getChannel(ChannelAddress.fromString(this.config.digitalInput3()));
-
-		Optional<Boolean> di1 = in1.value().asOptional();
-		Optional<Boolean> di2 = in2.value().asOptional();
-		Optional<Boolean> di3 = in3.value().asOptional();
-
-		if (isInputfalse(di1)) {
-			if (isInputfalse(di2)) {
-				if (isInputfalse(di3)) {
-					// 0 0 0
-					return State.TOTAL_ONGRID;
-				} else {
-					// 0 0 1
-					return State.ERROR_ONGRID;
-				}
-			} else {
-				if (isInputfalse(di3)) {
-					// 0 1 0
-					return State.GOING_ONGRID;
-				} else {
-					// 0 1 1
-					return State.TRANSITION_OFF_TO_ON;
-				}
-			}
-		} else {
-			if (isInputfalse(di2)) {
-				if (isInputfalse(di3)) {
-					// 1 0 0
-					return State.ERROR_OFFGRID;
-				} else {
-					// 1 0 1
-					return State.ERROR_OFFGRID;
-				}
-
-			} else {
-				if (isInputfalse(di3)) {
-					// 1 1 0
-					return State.TRANSITION_ON_TO_OFF;
-				} else {
-					// 1 1 1
-					return State.TOTAL_OFFGRID;
-				}
-			}
-		}
-	}
-
-	/**
-	 * 
-	 */
-	private boolean isInputfalse(Optional<Boolean> input) {
-		return input.isPresent() && input.get() == true;
-
-	}
-	
-	
 
 	/**
 	 * Helper to set all the digital output based on the param
@@ -288,17 +220,12 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	public void handleWritingDigitalOutput(boolean value1, boolean value2, boolean value3)
 			throws IllegalArgumentException, OpenemsNamedException {
 
-		setOutput( this.componentManager
-				.getChannel(ChannelAddress.fromString(this.config.digitalOutput1())), value1);
-		
-		setOutput(this.componentManager
-				.getChannel(ChannelAddress.fromString(this.config.digitalOutput2())), value2);
-		
-		setOutput(this.componentManager
-				.getChannel(ChannelAddress.fromString(this.config.digitalOutput3())), value3);
+		setOutput(this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput1())), value1);
+
+		setOutput(this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput2())), value2);
+
+		setOutput(this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput3())), value3);
 	}
-	
-	
 
 	/**
 	 * Helper function to switch an output if it was not switched before.
@@ -318,8 +245,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 
 		}
 	}
-	
-	
+
 	public CurrentState getSinexcelState() {
 		EnumReadChannel currentState = this.channel(SinexcelChannelId.SINEXCEL_STATE);
 		CurrentState curState = currentState.value().asEnum();
@@ -591,8 +517,6 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 						m(SinexcelChannelId.ANALOG_DC_CHARGE_ENERGY, new UnsignedDoublewordElement(0x0090)), //
 						m(SinexcelChannelId.ANALOG_DC_DISCHARGE_ENERGY, new UnsignedDoublewordElement(0x0092))), //
 
-				
-				
 				new FC3ReadRegistersTask(0x0220, Priority.ONCE,
 						m(SinexcelChannelId.VERSION, new StringWordElement(0x0220, 8))), //
 

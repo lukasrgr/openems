@@ -8,7 +8,7 @@ public class TransitionOnToOffHandler extends StateHandler<State, Context> {
 
 	@Override
 	protected State runAndGetNextState(Context context) throws OpenemsNamedException {
-		State decisionVariable = context.component.stateTransitionHelper();
+		State decisionVariable = context.stateTransitionHelper();
 		switch (decisionVariable) {
 
 		case TRANSITION_ON_TO_OFF:

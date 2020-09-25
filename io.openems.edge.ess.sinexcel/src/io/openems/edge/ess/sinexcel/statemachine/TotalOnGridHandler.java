@@ -9,13 +9,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TotalOnGridHandler extends StateHandler<State, Context> {
-	
+
 	private final Logger log = LoggerFactory.getLogger(TotalOnGridHandler.class);
 
 	@Override
 	protected State runAndGetNextState(Context context) throws OpenemsNamedException {
 
-		State decisionVariable = context.component.stateTransitionHelper();
+		State decisionVariable = context.stateTransitionHelper();
 		switch (decisionVariable) {
 
 		case ERROR_ONGRID:
@@ -24,8 +24,8 @@ public class TotalOnGridHandler extends StateHandler<State, Context> {
 			return State.TRANSITION_ON_TO_OFF;
 		case TOTAL_ONGRID:
 			return performOnGrid(context);
-			//return State.TOTAL_ONGRID;
-			
+		// return State.TOTAL_ONGRID;
+
 		case GOING_ONGRID:
 		case TOTAL_OFFGRID:
 		case UNDEFINED:
@@ -41,7 +41,7 @@ public class TotalOnGridHandler extends StateHandler<State, Context> {
 	private State performOnGrid(Context context) throws IllegalArgumentException, OpenemsNamedException {
 		log.info("Inside  total ongrid handler , Perform ongrid method()");
 		context.component.handleWritingDigitalOutput(true, false, true);
-		
+
 		CurrentState currentState = context.component.getSinexcelState();
 		switch (currentState) {
 		case UNDEFINED:
@@ -58,7 +58,7 @@ public class TotalOnGridHandler extends StateHandler<State, Context> {
 		default:
 			context.component.softStart(false);
 		}
-		
+
 		return State.TOTAL_ONGRID;
 	}
 

@@ -9,7 +9,7 @@ public class UndefinedHandler extends StateHandler<State, Context> {
 	@Override
 	protected State runAndGetNextState(Context context) throws OpenemsNamedException {
 
-		State decisionVariable = context.component.stateTransitionHelper();
+		State decisionVariable = context.stateTransitionHelper();
 		switch (decisionVariable) {
 
 		case GOING_ONGRID:

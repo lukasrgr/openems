@@ -4,19 +4,17 @@ import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.edge.common.statemachine.StateHandler;
 import io.openems.edge.ess.sinexcel.statemachine.StateMachine.State;
 
-public class ErrorOffGridHandler  extends StateHandler<State, Context> {
+public class ErrorOffGridHandler extends StateHandler<State, Context> {
 
 	@Override
 	protected State runAndGetNextState(Context context) throws OpenemsNamedException {
-		
-		State decisionVariable = context.component.stateTransitionHelper();
+
+		State decisionVariable = context.stateTransitionHelper();
 		switch (decisionVariable) {
-		
+
 		case ERROR_OFFGRID:
-			//TODO Switch off logic
+			// TODO Switch off logic
 			return State.ERROR_OFFGRID;
-		
-		
 
 		case TRANSITION_ON_TO_OFF:
 		case TOTAL_OFFGRID:
@@ -28,7 +26,7 @@ public class ErrorOffGridHandler  extends StateHandler<State, Context> {
 			return State.UNDEFINED;
 
 		}
-		return decisionVariable;		
+		return decisionVariable;
 	}
 
 }

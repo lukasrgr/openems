@@ -8,22 +8,21 @@ import io.openems.edge.common.statemachine.StateHandler;
 import io.openems.edge.ess.sinexcel.statemachine.StateMachine.State;
 
 public class GoingOnGridHandler extends StateHandler<State, Context> {
-	
+
 	private final Logger log = LoggerFactory.getLogger(GoingOnGridHandler.class);
-	
+
 	private int attemptCounter = 0;
 	private int maxAttempt = 10;
-	
-	
+
 	@Override
-	protected void onEntry(Context context) throws OpenemsNamedException{
-		//this.lastAttempt = Instant.MIN;
+	protected void onEntry(Context context) throws OpenemsNamedException {
+		// this.lastAttempt = Instant.MIN;
 		this.attemptCounter = 0;
 	}
 
 	@Override
 	protected State runAndGetNextState(Context context) throws OpenemsNamedException {
-		State decisionVariable = context.component.stateTransitionHelper();
+		State decisionVariable = context.stateTransitionHelper();
 		switch (decisionVariable) {
 
 		case ERROR_ONGRID:
@@ -44,17 +43,16 @@ public class GoingOnGridHandler extends StateHandler<State, Context> {
 		return decisionVariable;
 	}
 
-	
 	private State performGoingOnGrid(Context context) throws IllegalArgumentException, OpenemsNamedException {
-		
+
 		if (this.attemptCounter > this.maxAttempt) {
 			return State.ERROR_ONGRID;
 		}
 		this.attemptCounter++;
-		
+
 		log.info("Inside  Going OnGrid handler , performGoingOnGrid");
 		context.component.handleWritingDigitalOutput(true, false, true);
 		return State.GOING_ONGRID;
-		
+
 	}
 }

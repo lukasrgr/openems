@@ -10,27 +10,26 @@ import io.openems.edge.ess.sinexcel.statemachine.StateMachine.State;
 public class TransitionOffToOnHandler extends StateHandler<State, Context> {
 
 	private final Logger log = LoggerFactory.getLogger(TransitionOffToOnHandler.class);
-	
-	
-	//private Instant lastAttempt = Instant.MIN;
+
+	// private Instant lastAttempt = Instant.MIN;
 	private final static int WAIT_SECONDS = 50;
 	private int attemptCounter = 0;
 	private int maxAttempt = 10;
-	
+
 	@Override
-	protected void onEntry(Context context) throws OpenemsNamedException{
-		//this.lastAttempt = Instant.MIN;
+	protected void onEntry(Context context) throws OpenemsNamedException {
+		// this.lastAttempt = Instant.MIN;
 		this.attemptCounter = 0;
 	}
-	
+
 	@Override
 	protected State runAndGetNextState(Context context) throws OpenemsNamedException {
-		State decisionVariable = context.component.stateTransitionHelper();
+		State decisionVariable = context.stateTransitionHelper();
 		switch (decisionVariable) {
 
 		case TRANSITION_OFF_TO_ON:
 			return performTransitionOffToOn();
-			
+
 		case TOTAL_ONGRID:
 			return State.TOTAL_ONGRID;
 
@@ -47,8 +46,7 @@ public class TransitionOffToOnHandler extends StateHandler<State, Context> {
 	}
 
 	private State performTransitionOffToOn() {
-		
-		
+
 		return null;
 	}
 
