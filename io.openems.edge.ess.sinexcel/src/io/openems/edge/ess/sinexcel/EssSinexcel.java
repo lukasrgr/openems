@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import io.openems.common.channel.AccessMode;
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
+import io.openems.common.types.ChannelAddress;
 import io.openems.edge.battery.api.Battery;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
@@ -36,6 +37,9 @@ import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC6WriteRegisterTask;
+import io.openems.edge.common.channel.BooleanReadChannel;
+import io.openems.edge.common.channel.BooleanWriteChannel;
+import io.openems.edge.common.channel.EnumReadChannel;
 import io.openems.edge.common.channel.EnumWriteChannel;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.channel.StateChannel;
@@ -53,6 +57,9 @@ import io.openems.edge.ess.power.api.Phase;
 import io.openems.edge.ess.power.api.Power;
 import io.openems.edge.ess.power.api.Pwr;
 import io.openems.edge.ess.power.api.Relationship;
+import io.openems.edge.ess.sinexcel.statemachine.Context;
+import io.openems.edge.ess.sinexcel.statemachine.StateMachine;
+import io.openems.edge.ess.sinexcel.statemachine.StateMachine.State;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(//
@@ -81,8 +88,13 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	private int counterOn = 0;
 	private int counterOff = 0;
 
-	// State-Machines
-	private final StateMachine stateMachine;
+//	// State-Machines
+//	private final StateMachine stateMachine;
+
+	/**
+	 * Manages the {@link State}s of the StateMachine.
+	 */
+	private final StateMachine stateMachine = new StateMachine(State.UNDEFINED);
 
 	/**
 	 * Helper wrapping class to handle listeners on battery Channels.
@@ -90,7 +102,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	private final ChannelHandler channelHandler = new ChannelHandler(this);
 
 	@Reference
-	protected ComponentManager componentManager;
+	private ComponentManager componentManager;
 
 	protected Config config;
 
@@ -110,11 +122,23 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		this.battery = battery;
 	}
 
+	public EssSinexcel() throws OpenemsNamedException {
+		super(//
+				OpenemsComponent.ChannelId.values(), //
+				SymmetricEss.ChannelId.values(), //
+				ManagedSymmetricEss.ChannelId.values(), //
+				SinexcelChannelId.values() //
+		);
+		this._setMaxApparentPower(EssSinexcel.MAX_APPARENT_POWER);
+		// this.stateMachine = new StateMachine(this);
+	}
+
 	@Activate
 	void activate(ComponentContext context, Config config) throws OpenemsNamedException {
+		this.config = config;
 		super.activate(context, config.id(), config.alias(), config.enabled(), DEFAULT_UNIT_ID, this.cm, "Modbus",
 				config.modbus_id());
-		this.config = config;
+		//this.config = config;
 		this.inverterState = config.InverterState();
 
 		// initialize the connection to the battery
@@ -136,17 +160,171 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		super.deactivate();
 	}
 
-	public EssSinexcel() throws OpenemsNamedException {
-		super(//
-				OpenemsComponent.ChannelId.values(), //
-				SymmetricEss.ChannelId.values(), //
-				ManagedSymmetricEss.ChannelId.values(), //
-				SinexcelChannelId.values() //
-		);
-		this._setMaxApparentPower(EssSinexcel.MAX_APPARENT_POWER);
-		this.stateMachine = new StateMachine(this);
+	@Override
+	public void handleEvent(Event event) {
+		if (!this.isEnabled()) {
+			return;
+		}
+//		boolean island = faultIslanding();
+		switch (event.getTopic()) {
+		case EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE:
+			try {
+				this.setBatteryRanges();
+				this.doHandlingSlowFloatVoltage();
+				this.handleStateMachine();
+
+				// this.stateMachine.run();
+			} catch (OpenemsNamedException e) {
+				this.logError(this.log, "EventHandler failed: " + e.getMessage());
+			}
+
+//			if(island = true) {
+//				islandingOn();
+//			}
+//			else if(island = false) {
+//				islandingOff();
+//			}
+
+			break;
+		}
+
 	}
 
+	private void handleStateMachine() {
+		this.channel(SinexcelChannelId.STATE_MACHINE).setNextValue(this.stateMachine.getCurrentState());
+
+		// Prepare Context
+		Context context = new Context(this, this.battery, this.config);
+
+		// Call the StateMachine
+		try {
+			this.stateMachine.run(context);
+
+		} catch (OpenemsNamedException e) {
+
+			this.logError(this.log, "StateMachine failed: " + e.getMessage());
+		}
+
+	}
+
+	public State stateTransitionHelper() throws IllegalArgumentException, OpenemsNamedException {
+
+		// Digital input channel one , false is on-grid and true is off-grid
+		BooleanReadChannel in1 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
+
+		// Digital input channel two , true when the bender is waiting
+		BooleanReadChannel in2 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
+
+		// Digital input channel two , true when the bender is waiting
+		BooleanReadChannel in3 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput3()));
+
+		Optional<Boolean> di1 = in1.value().asOptional();
+		Optional<Boolean> di2 = in2.value().asOptional();
+		Optional<Boolean> di3 = in3.value().asOptional();
+
+		if (isInputfalse(di1)) {
+			if (isInputfalse(di2)) {
+				if (isInputfalse(di3)) {
+					// 0 0 0
+					return State.TOTAL_ONGRID;
+				} else {
+					// 0 0 1
+					return State.ERROR_ONGRID;
+				}
+			} else {
+				if (isInputfalse(di3)) {
+					// 0 1 0
+					return State.GOING_ONGRID;
+				} else {
+					// 0 1 1
+					return State.TRANSITION_OFF_TO_ON;
+				}
+			}
+		} else {
+			if (isInputfalse(di2)) {
+				if (isInputfalse(di3)) {
+					// 1 0 0
+					return State.ERROR_OFFGRID;
+				} else {
+					// 1 0 1
+					return State.ERROR_OFFGRID;
+				}
+
+			} else {
+				if (isInputfalse(di3)) {
+					// 1 1 0
+					return State.TRANSITION_ON_TO_OFF;
+				} else {
+					// 1 1 1
+					return State.TOTAL_OFFGRID;
+				}
+			}
+		}
+	}
+
+	/**
+	 * 
+	 */
+	private boolean isInputfalse(Optional<Boolean> input) {
+		return input.isPresent() && input.get() == true;
+
+	}
+	
+	
+
+	/**
+	 * Helper to set all the digital output based on the param
+	 * 
+	 * @param value1 boolean true to set-on the relay, false to set-off the relay
+	 * @param value2 boolean true to set-on the relay, false to set-off the relay
+	 * @param value3 boolean true to set-on the relay, false to set-off the relay
+	 * @throws IllegalArgumentException on error
+	 * @throws OpenemsNamedException    on error
+	 */
+
+	public void handleWritingDigitalOutput(boolean value1, boolean value2, boolean value3)
+			throws IllegalArgumentException, OpenemsNamedException {
+
+		setOutput( this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalOutput1())), value1);
+		
+		setOutput(this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalOutput2())), value2);
+		
+		setOutput(this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalOutput3())), value3);
+	}
+	
+	
+
+	/**
+	 * Helper function to switch an output if it was not switched before.
+	 *
+	 * @param value true to switch ON, false to switch ON
+	 */
+	private void setOutput(BooleanWriteChannel channel, boolean value)
+			throws IllegalArgumentException, OpenemsNamedException {
+		try {
+			Optional<Boolean> currentValueOpt = channel.value().asOptional();
+			if (!currentValueOpt.isPresent() || currentValueOpt.get() != value) {
+				this.log.info("Set output [" + channel.address() + "] " + (value) + ".");
+				channel.setNextWriteValue(value);
+			}
+		} catch (OpenemsNamedException e) {
+			this.log.error("Unable to set output: [" + channel.address() + "] " + e.getMessage());
+
+		}
+	}
+	
+	
+	public CurrentState getSinexcelState() {
+		EnumReadChannel currentState = this.channel(SinexcelChannelId.SINEXCEL_STATE);
+		CurrentState curState = currentState.value().asEnum();
+		return curState;
+	}
 //	private void getNoOfCells() throws OpenemsNamedException {
 //		Battery bms = this.componentManager.getComponent(this.config.battery_id());
 //		this.numberOfSlaves = (int) bms.getComponentContext().getProperties().get("numberOfSlaves");
@@ -403,13 +581,18 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 								ElementToChannelConverter.SCALE_FACTOR_2), //
 						new DummyRegisterElement(0x0082, 0x0083),
 						m(SinexcelChannelId.TEMPERATURE, new SignedWordElement(0x0084)),
-						new DummyRegisterElement(0x0085, 0x008C), //
+						new DummyRegisterElement(0x0085, 0x0089), //
+						m(SinexcelChannelId.SET_OFF_GRID_FREQUENCY, new SignedWordElement(0x008A),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_2),
+						new DummyRegisterElement(0x008B, 0x008C), //
 						m(SinexcelChannelId.DC_POWER, new SignedWordElement(0x008D),
 								ElementToChannelConverter.SCALE_FACTOR_1),
 						new DummyRegisterElement(0x008E, 0x008F), //
 						m(SinexcelChannelId.ANALOG_DC_CHARGE_ENERGY, new UnsignedDoublewordElement(0x0090)), //
 						m(SinexcelChannelId.ANALOG_DC_DISCHARGE_ENERGY, new UnsignedDoublewordElement(0x0092))), //
 
+				
+				
 				new FC3ReadRegistersTask(0x0220, Priority.ONCE,
 						m(SinexcelChannelId.VERSION, new StringWordElement(0x0220, 8))), //
 
@@ -619,34 +802,6 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	}
 
 	@Override
-	public void handleEvent(Event event) {
-		if (!this.isEnabled()) {
-			return;
-		}
-//		boolean island = faultIslanding();
-		switch (event.getTopic()) {
-		case EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE:
-			try {
-				this.setBatteryRanges();
-				this.doHandlingSlowFloatVoltage();
-				this.stateMachine.run();
-			} catch (OpenemsNamedException e) {
-				this.logError(this.log, "EventHandler failed: " + e.getMessage());
-			}
-
-//			if(island = true) {
-//				islandingOn();
-//			}
-//			else if(island = false) {
-//				islandingOff();
-//			}
-
-			break;
-		}
-
-	}
-
-	@Override
 	public Power getPower() {
 		return this.power;
 	}
@@ -703,5 +858,25 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 				SymmetricEss.getModbusSlaveNatureTable(accessMode), //
 				ManagedSymmetricEss.getModbusSlaveNatureTable(accessMode) //
 		);
+	}
+
+	public ComponentManager getComponentManager() {
+		return componentManager;
+	}
+
+	public void setComponentManager(ComponentManager componentManager) {
+		this.componentManager = componentManager;
+	}
+
+	/**
+	 * Setting the frequency in the off grid mode
+	 * 
+	 * @throws OpenemsNamedException
+	 */
+	public void setFrequency() throws OpenemsNamedException {
+
+		IntegerWriteChannel setFreq = this.channel(SinexcelChannelId.SET_OFF_GRID_FREQUENCY);
+		setFreq.setNextWriteValue(52); // 52 hz frequency
+
 	}
 }

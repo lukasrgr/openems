@@ -12,9 +12,12 @@ import io.openems.edge.common.channel.IntegerDoc;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.channel.StateChannel;
 import io.openems.edge.common.sum.GridMode;
+import io.openems.edge.ess.sinexcel.statemachine.StateMachine.State;
 
 public enum SinexcelChannelId implements ChannelId {
 
+	STATE_MACHINE(Doc.of(State.values()) //
+			.text("Current State of State-Machine")), //
 	MOD_ON_CMD(Doc.of(FalseTrue.values()) //
 			.accessMode(AccessMode.READ_WRITE)), //
 	MOD_OFF_CMD(Doc.of(FalseTrue.values()) //
@@ -110,6 +113,9 @@ public enum SinexcelChannelId implements ChannelId {
 
 	FREQUENCY(Doc.of(OpenemsType.INTEGER) //
 			.unit(Unit.HERTZ)), //
+	SET_OFF_GRID_FREQUENCY(Doc.of(OpenemsType.INTEGER) //
+			.accessMode(AccessMode.READ_WRITE) //
+			.unit(Unit.HERTZ)),
 	DC_CURRENT(Doc.of(OpenemsType.INTEGER) //
 			.unit(Unit.AMPERE)), //
 	DC_VOLTAGE(Doc.of(OpenemsType.INTEGER) //
