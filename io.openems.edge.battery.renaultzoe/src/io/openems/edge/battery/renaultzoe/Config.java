@@ -3,8 +3,6 @@ package io.openems.edge.battery.renaultzoe;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
-import io.openems.edge.battery.renaultzoe.BatteryState;
-
 @ObjectClassDefinition( //
 		name = "BMS RenaultZoe", //
 		description = "Implements the Renault Zoe battery.")
