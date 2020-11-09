@@ -1,6 +1,8 @@
-= BYD Battery-Box Commercial
+# io.openems.edge.battery.bydcommercial Provider
 
-Implemented Natures::
-- Battery
+${Bundle-Description}
 
-https://github.com/OpenEMS/openems/tree/develop/io.openems.edge.battery.bydcommercial[Source Code icon:github[]]
+## Example
+
+## References
+
