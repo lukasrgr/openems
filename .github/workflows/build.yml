@@ -130,7 +130,7 @@ jobs:
           node_modules/.bin/ng build -c "openems,openems-edge-prod,prod"
           node_modules/.bin/ng lint
           export CHROME_BIN=/usr/bin/google-chrome-stable
-          npm run test -- --no-watch --no-progress --browsers=ChromeHeadlessCI
+          npm run test -- --no-watch --no-progress --browsers=ChromeHeadlessCI --code-coverage
 
       - name: Install GitHub CLI
         uses: actions/checkout@v2
