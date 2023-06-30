@@ -74,9 +74,12 @@ export class Controller_Io_HeatpumpModalComponent implements OnInit {
   }
 
   public applyChanges() {
+
+
     if (this.edge != null) {
       if (this.edge.roleIsAtLeast('owner')) {
         if (this.formGroup.controls['automaticRecommendationSurplusPower'].value < this.formGroup.controls['automaticForceOnSurplusPower'].value) {
+          console.log("TEst");
           let updateComponentArray = [];
           Object.keys(this.formGroup.controls).forEach((element, index) => {
             if (this.formGroup.controls[element].dirty) {
