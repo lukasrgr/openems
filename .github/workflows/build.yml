@@ -130,7 +130,7 @@ jobs:
       #     node_modules/.bin/ng build -c "openems,openems-edge-prod,prod"
       #     node_modules/.bin/ng lint
       #     export CHROME_BIN=/usr/bin/google-chrome-stable
-      #     npm run test -- --no-watch --no-progress --browsers=ChromeHeadlessCI --code-coverage
+      #     npm run test -- --no-watch --no-progress --browsers=ChromeHeadlessCI --code-coverage      
 
       # - name: Install GitHub CLI
       #   uses:  actions/checkout@v3
@@ -143,8 +143,10 @@ jobs:
             GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
+            cd ui
+            npm run test -- --no-watch --no-progress --browsers=ChromeHeadlessCI --code-coverage
+            ls -la
             gh pr comment ${{github.event.pull_request.number}} --body "Test"
-
       #
       # Is this a Tag? Prepare release assets
       #
