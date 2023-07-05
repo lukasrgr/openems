@@ -132,19 +132,18 @@ jobs:
       #     export CHROME_BIN=/usr/bin/google-chrome-stable
       #     npm run test -- --no-watch --no-progress --browsers=ChromeHeadlessCI --code-coverage
 
-      - name: Install GitHub CLI
-        uses:  actions/checkout@v3
-        with:
-          repository: cli/cli
-          path: ./gh
+      # - name: Install GitHub CLI
+      #   uses:  actions/checkout@v3
+      #   with:
+      #     repository: cli/cli
+      #     path: ./gh
         
       - name: Comment on Pull Request
         env:
             GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-            ls -la ./gh
-            ./gh pr comment "Test"
+            gh pr comment "Test"
 
       #
       # Is this a Tag? Prepare release assets
