@@ -144,7 +144,7 @@ jobs:
             PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
             ls -la ./gh
-            ./gh/bin/gh pr comment "Test"
+            ./gh pr comment "Test"
 
       #
       # Is this a Tag? Prepare release assets
