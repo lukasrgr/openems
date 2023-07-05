@@ -143,7 +143,7 @@ jobs:
             GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-            gh pr comment 22 --body "Test"
+            gh pr comment ${{github.event.pull_request.number}} --body "Test"
 
       #
       # Is this a Tag? Prepare release assets
