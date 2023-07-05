@@ -121,22 +121,18 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: ${{ runner.os }}-node-
 
-      # - name: Build OpenEMS UI
-      #   run: |
-      #     cd ui
-      #     npm install 
-      #     npm ci --prefer-offline --cache ~/.npm
-      #     node_modules/.bin/ng config cli.cache.path "~/.ng"
-      #     node_modules/.bin/ng build -c "openems,openems-edge-prod,prod"
-      #     node_modules/.bin/ng lint
-      #     export CHROME_BIN=/usr/bin/google-chrome-stable
-      #     npm run test -- --no-watch --no-progress --browsers=ChromeHeadlessCI --code-coverage      
+      - name: Build OpenEMS UI
+        run: |
+          cd ui
+          npm install 
+          npm ci --prefer-offline --cache ~/.npm
+          node_modules/.bin/ng config cli.cache.path "~/.ng"
 
-      # - name: Install GitHub CLI
-      #   uses:  actions/checkout@v3
-      #   with:
-      #     repository: cli/cli
-      #     path: ./gh
+      - name: Install GitHub CLI
+        uses:  actions/checkout@v3
+        with:
+          repository: cli/cli
+          path: ./gh
         
       - name: Comment on Pull Request
         env:
@@ -144,6 +140,7 @@ jobs:
             PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
             cd ui
+            export CHROME_BIN=/usr/bin/google-chrome-stable
             npm run test -- --no-watch --no-progress --browsers=ChromeHeadlessCI --code-coverage
             ls -la
             gh pr comment ${{github.event.pull_request.number}} --body "Test"
