@@ -29,7 +29,8 @@ module.exports = function (config) {
       subdir: '.',
       reporters: [
         { type: 'html' },
-        { type: 'text-summary' }
+        { type: 'text-summary' },
+        { type: 'cobertura', dir: 'coverage/', file: 'coverage.cobertura.xml' }
       ],
     },
     reporters: ['progress', 'kjhtml'],
