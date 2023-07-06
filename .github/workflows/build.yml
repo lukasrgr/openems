@@ -124,9 +124,9 @@ jobs:
       - name: Build OpenEMS UI
         run: |
           cd ui
-          npm install 
-          npm ci --prefer-offline --cache ~/.npm
-          node_modules/.bin/ng config cli.cache.path "~/.ng"
+        # npm install 
+        # npm ci --prefer-offline --cache ~/.npm
+        # node_modules/.bin/ng config cli.cache.path "~/.ng"
 
       - name: Code Coverage Report
         uses: irongut/CodeCoverageSummary@v1.3.0
