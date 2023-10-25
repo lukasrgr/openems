@@ -4,10 +4,10 @@ import { TranslateService } from '@ngx-translate/core';
 import { CalAnimation, IAngularMyDpOptions, IMyDate, IMyDateRangeModel } from 'angular-mydatepicker';
 import { endOfMonth, startOfMonth } from 'date-fns';
 import { addDays, endOfWeek, endOfYear, getDate, getMonth, getYear, startOfWeek, startOfYear } from 'date-fns/esm';
+
 import { Edge } from '../../edge/edge';
 import { DefaultTypes } from '../../service/defaulttypes';
-import { Service } from '../../shared';
-
+import { Service, Utils } from '../../shared';
 
 @Component({
     selector: 'pickdatepopover',
@@ -54,7 +54,9 @@ export class PickDatePopoverComponent implements OnInit {
     ) { }
 
     ngOnInit() {
-        this.locale = this.translate.getBrowserLang();
+        // Restrict user to pick date before ibn-date
+        this.myDpOptions.disableUntil = { day: Utils.subtractSafely(getDate(this.edge?.firstSetupProtocol), 1) ?? 1, month: Utils.addSafely(getMonth(this.edge?.firstSetupProtocol), 1) ?? 1, year: this.edge?.firstSetupProtocol?.getFullYear() ?? 2013 },
+            this.locale = this.translate.getBrowserLang();
     }
 
     /**
